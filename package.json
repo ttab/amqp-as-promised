@@ -1,0 +1,23 @@
+{
+	"name": "amqp-as-promised",
+	"version": "0.0.1",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/ttab/amqp-as-promised"
+	},
+	"main": "lib/amqp-client",
+	"description": "Promise wrappers for node-amqp",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"keywords": [
+		"amqp",
+		"promises",
+		"q"
+	],
+	"author": "Martin Algesten <martin@algesten.se>",
+	"contributors": [
+		"Fredrik Appelberg <fredrik.appelberg@tt.se>"
+	]
+	"license": "BSD-2-Clause"
+}
