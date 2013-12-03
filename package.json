@@ -18,6 +18,11 @@
 	"author": "Martin Algesten <martin@algesten.se>",
 	"contributors": [
 		"Fredrik Appelberg <fredrik.appelberg@tt.se>"
-	]
-	"license": "BSD-2-Clause"
+	],
+	"license": "BSD-2-Clause",
+	"dependencies": {
+		"q": "~0.9.7",
+		"amqp": "~0.1.8",
+		"bog": "0.0.5"
+	}
 }
