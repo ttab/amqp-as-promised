@@ -1,14 +1,15 @@
 {
 	"name": "amqp-as-promised",
+	"description": "Promise wrappers for node-amqp",
 	"version": "0.0.1",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/ttab/amqp-as-promised"
 	},
 	"main": "lib/amqp-client",
-	"description": "Promise wrappers for node-amqp",
 	"scripts": {
-		"test": "echo \"Error: no test specified\" && exit 1"
+		"test": "cake test",
+		"prepublish": "cake dist"
 	},
 	"keywords": [
 		"amqp",
@@ -24,5 +25,10 @@
 		"q": "~0.9.7",
 		"amqp": "~0.1.8",
 		"bog": "0.0.5"
+	},
+	"devDependencies": {
+		"mocha": "~1.13.0",
+		"chai": "~1.8.1",
+		"coffee-script": "~1.6.3"
 	}
 }
