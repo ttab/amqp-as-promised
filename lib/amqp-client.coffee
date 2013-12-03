@@ -73,7 +73,7 @@ module.exports = (conf) ->
             opts.autoDelete = qname == ""
             (Q.all [(exchange exname), (queue qname, opts)])
         .spread (ex, q) ->
-            log.info 'binding:', exname, qname, topic
+            log.info 'binding:', exname, q.name, topic
             q.bind ex, topic
             q.on 'queueBindOk', ->
                 wrap = ->
@@ -86,7 +86,7 @@ module.exports = (conf) ->
                     q._ttCtag = ctag
                     q._ttEx = ex
                     q._ttTopic = topic
-                    log.info 'consumer bound:', qname, ctag
+                    log.info 'consumer bound:', q.name, ctag
                     def.resolve ex
         .done()
         def.promise
