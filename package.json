@@ -1,7 +1,7 @@
 {
 	"name": "amqp-as-promised",
 	"description": "Promise wrappers for node-amqp",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/ttab/amqp-as-promised"
@@ -20,7 +20,7 @@
 	"contributors": [
 		"Fredrik Appelberg <fredrik.appelberg@tt.se>"
 	],
-	"license": "BSD-2-Clause",
+	"license": "MIT",
 	"dependencies": {
 		"q": "~0.9.7",
 		"amqp": "~0.1.8",
