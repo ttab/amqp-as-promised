@@ -1,7 +1,7 @@
 {
 	"name": "amqp-as-promised",
 	"description": "Promise wrappers for node-amqp",
-	"version": "0.0.2",
+	"version": "0.0.3",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/ttab/amqp-as-promised"
