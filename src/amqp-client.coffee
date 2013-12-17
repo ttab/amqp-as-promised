@@ -6,7 +6,7 @@ module.exports = (conf) ->
 
     log.info("conf.local=true means no amqp connection") if conf.local
 
-    isShutdown = false
+    isShutdown = null
 
     conn = do ->
         # disable if local
@@ -113,9 +113,10 @@ module.exports = (conf) ->
         .done()
         def.promise
 
+    shutdownDef = null
     shutdown = ->
-        isShutdown = true
-        def = Q.defer()
+        return isShutdown.promise if isShutdown
+        def = isShutdown = Q.defer()
         conn.then (mq) ->
             return def.resolve true if mq.local
             log.info 'closing amqp connection'
