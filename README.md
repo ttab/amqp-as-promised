@@ -31,7 +31,6 @@ Promise wrapper around [node-amqp](https://github.com/postwait/node-amqp).
         },
     }
 
-
 ## Using `amqpc` to publish
 
     amqpc.exchange('myexchange').then (ex) ->
@@ -43,6 +42,11 @@ Promise wrapper around [node-amqp](https://github.com/postwait/node-amqp).
 
     amqpc.bind 'myexchange', 'mytopic.#', (msg, headers, del) ->
         console.log 'received message', msg
+
+## Using `amqpc` to create an anonymous queue
+
+    amqpc.queue('').then (q) ->
+	    console.log 'queue created: ' + q.name
 
 ## Shutting down
 
