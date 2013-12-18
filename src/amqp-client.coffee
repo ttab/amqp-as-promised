@@ -73,9 +73,7 @@ module.exports = (conf) ->
         qname = "" if not qname
         def = Q.defer()
         (unbind qname).then ->
-            opts = {durable:true}
-            opts.autoDelete = qname == ""
-            (Q.all [(exchange exname), (queue qname, opts)])
+            (Q.all [(exchange exname), (queue qname)])
         .spread (ex, q) ->
             log.info 'binding:', exname, q.name, topic
             q.bind ex, topic
