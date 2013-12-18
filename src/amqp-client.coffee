@@ -47,14 +47,18 @@ module.exports = (conf) ->
         def.promise
 
     queue = (qname, opts) ->
+        throw new Error 'Unable to connect queue when conf.local = true' if conf.local
+        throw new Error 'Unable to connect queue shutdown' if isShutdown
         def = Q.defer()
         conn.then (mq) ->
-            prom = mq._ttQueues[qname]
-            return (prom.then (q) -> def.resolve q) if prom
-            mq._ttQueues[qname] = def.promise if qname
+            if qname != ""
+                prom = mq._ttQueues[qname]
+                return (prom.then (q) -> def.resolve q) if prom
+                mq._ttQueues[qname] = def.promise if qname
+            opts = opts ? { durable: true, autoDelete: qname == "" }
             mq.queue qname, opts, (queue) ->
                 log.info 'queue created:', queue.name
-                mq._ttQueues[queue.name] = def.promise unless qname
+                mq._ttQueues[queue.name] = def.promise if qname == ""
                 def.resolve queue
         .done()
         def.promise
@@ -132,6 +136,7 @@ module.exports = (conf) ->
 
     {
         exchange: exchange
+        queue: queue
         bind: bind
         shutdown: shutdown
         local: conf.local
