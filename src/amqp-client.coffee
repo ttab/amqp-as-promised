@@ -130,19 +130,19 @@ module.exports = (conf) ->
 class QueueWrapper
 
     constructor: (@conn, @queue) ->
-        @qname = @queue.name
+        @name = @queue.name
 
     bind: (ex, topic) =>
         throw new Error('Exchange is not an object') unless ex or typeof ex != 'object'
         throw new Error('Topic is not a string') unless topic or typeof topic != 'string'
         def = Q.defer()
         @unbind().then =>
-            log.info 'binding:', ex.name, @qname, topic
+            log.info 'binding:', ex.name, @name, topic
             @queue.bind ex, topic
             @queue.once 'queueBindOk', =>
                 @_ex = ex
                 @_topic = topic
-                log.info 'queue bound:', @qname, @_topic
+                log.info 'queue bound:', @name, @_topic
                 def.resolve this
         .done()
         def.promise
@@ -155,7 +155,7 @@ class QueueWrapper
         @conn.then (mq) =>
             @queue.unbind @_ex, @_topic
             @queue.once 'queueUnbindOk', =>
-                log.info 'queue unbound:', @qname, @_topic
+                log.info 'queue unbound:', @name, @_topic
                 delete @_ex
                 delete @_topic
                 def.resolve this
@@ -179,7 +179,7 @@ class QueueWrapper
             (@queue.subscribe opts, wrapper).addCallback (ok) =>
                 ctag = ok.consumerTag
                 @_ctag = ctag
-                log.info 'subscribed:', @qname, ctag
+                log.info 'subscribed:', @name, ctag
                 def.resolve this
         .done()
         def.promise
@@ -192,7 +192,7 @@ class QueueWrapper
         ctag = @_ctag
         delete @_ctag
         @queue.unsubscribe ctag
-        log.info 'unsubscribed:', @qname, ctag
+        log.info 'unsubscribed:', @name, ctag
         def.resolve this
         def.promise
 

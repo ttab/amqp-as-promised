@@ -124,3 +124,7 @@ Unsubscribes current callback (if any).
 
 To be used with `queue.subscribe({ack:true}, callback)`. `reject`
 rejects the previous message and will requeue it if `requeue` is true.
+
+### `queue.name`
+
+Read only property with the queue name.
