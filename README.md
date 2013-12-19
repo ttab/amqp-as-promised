@@ -45,7 +45,12 @@ Promise wrapper around [node-amqp](https://github.com/postwait/node-amqp).
 
 ## Using `amqpc` to create an anonymous queue
 
-    amqpc.queue('').then (q) ->
+    amqpc.bind('myexchange', '', 'mytopic.#').then (q) ->
+	    console.log 'queue created: ' + q.name
+
+Or even shorter
+
+    amqpc.bind('myexchange', 'mytopic.#').then (q) ->
 	    console.log 'queue created: ' + q.name
 
 ## Shutting down

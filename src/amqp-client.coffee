@@ -134,7 +134,6 @@ module.exports = (conf) ->
 
     {
         exchange: exchange
-        queue: queue
         bind: bind
         shutdown: shutdown
         local: conf.local
