@@ -49,62 +49,23 @@ module.exports = (conf) ->
     queue = (qname, opts) ->
         throw new Error 'Unable to connect queue when conf.local = true' if conf.local
         throw new Error 'Unable to connect queue shutdown' if isShutdown
+        if qname != null and typeof qname == 'object'
+            opts = qname
+            qname = ''
+        qname = '' if !qname
+        opts = opts ? { durable: true, autoDelete: qname == '' }
         def = Q.defer()
         conn.then (mq) ->
-            if qname != ""
+            if qname != ''
                 prom = mq._ttQueues[qname]
                 return (prom.then (q) -> def.resolve q) if prom
-                mq._ttQueues[qname] = def.promise if qname
-            opts = opts ? { durable: true, autoDelete: qname == "" }
+                mq._ttQueues[qname] = def.promise
             mq.queue qname, opts, (queue) ->
                 log.info 'queue created:', queue.name
-                mq._ttQueues[queue.name] = def.promise if qname == ""
-                def.resolve wrapQueue queue
+                mq._ttQueues[queue.name] = def.promise if qname == ''
+                def.resolve new QueueWrapper(conn, queue)
         .done()
         def.promise
-
-    wrapQueue = (q) ->
-        qname = q.name
-        bind: (ex, topic) ->
-            def = Q.defer()
-            (unbind qname).then ->
-                log.info 'binding:', ex.name, qname, topic
-                q.bind ex, topic
-                q.on 'queueBindOk', ->
-                    wrap = ->
-                        try
-                            callback.apply(null, arguments)
-                        catch err
-                            log.error err
-                    (q.subscribe wrap).addCallback (ok) ->
-                        ctag = ok.consumerTag
-                        q._ttCtag = ctag
-                        q._ttEx = ex
-                        q._ttTopic = topic
-                        log.info 'consumer bound:', qname, ctag
-                        def.resolve qname
-            .done()
-            def.promise
-        unbind: ->
-            def = Q.defer()
-            return def.resolve qname unless q._ttEx
-            log.info 'unbinding:', qname
-            conn.then (mq) ->
-                q.unbind q._ttEx, q._ttTopic
-                q.on 'queueUnbindOk', ->
-                    try
-                        ctag = q._ttCtag
-                        delete q._ttCtag
-                        delete q._ttEx
-                        delete q._ttTopic
-                        q.unsubscribe ctag
-                        delete mq._ttQueues[qname]
-                        log.info 'consumer unbound:', qname, ctag
-                        def.resolve qname
-                    catch err
-                        log.error 'unbind failed', err
-            .done()
-            def.promise
 
     bind = (exname, qname, topic, callback) ->
         throw new Error 'Unable to bind when conf.local = true' if conf.local
@@ -112,11 +73,15 @@ module.exports = (conf) ->
         if typeof topic == 'function'
             callback = topic
             topic = qname
-            qname = ""
-        qname = "" if not qname
+            qname = ''
+        qname = '' if not qname
         def = Q.defer()
         (Q.all [(exchange exname), (queue qname)]).spread (ex, q) ->
-            (q.bind ex, topic).then -> def.resolve ex
+            q.bind ex, topic
+        .then (q) ->
+            q.subscribe callback
+        .then ->
+            def.resolve qname
         .done()
         def.promise
 
@@ -126,7 +91,11 @@ module.exports = (conf) ->
             return def.resolve true if mq.local
             qp = mq._ttQueues[qname]
             return def.resolve mq unless qp
-            qp.then (q) -> q.unbind()
+            qp
+        .then (q) ->
+            q.unbind()
+        .then (q) ->
+            q.unsubscribe()
         .then ->
             def.resolve qname
         .done()
@@ -156,3 +125,76 @@ module.exports = (conf) ->
         shutdown: shutdown
         local: conf.local
     }
+
+# Queue wrapper that only exposes that which we want to exposes in a promise manner
+class QueueWrapper
+
+    constructor: (@conn, @queue) ->
+        @qname = @queue.name
+
+    bind: (ex, topic) =>
+        throw new Error('Exchange is not an object') unless ex or typeof ex != 'object'
+        throw new Error('Topic is not a string') unless topic or typeof topic != 'string'
+        def = Q.defer()
+        @unbind().then =>
+            log.info 'binding:', ex.name, @qname, topic
+            @queue.bind ex, topic
+            @queue.once 'queueBindOk', =>
+                @_ex = ex
+                @_topic = topic
+                log.info 'queue bound:', @qname, @_topic
+                def.resolve this
+        .done()
+        def.promise
+
+    unbind: =>
+        def = Q.defer()
+        unless @_ex
+            def.resolve this
+            return def.promise
+        @conn.then (mq) =>
+            @queue.unbind @_ex, @_topic
+            @queue.once 'queueUnbindOk', =>
+                log.info 'queue unbound:', @qname, @_topic
+                delete @_ex
+                delete @_topic
+                def.resolve this
+        .done()
+        def.promise
+
+    subscribe: (opts, callb) =>
+        def = Q.defer()
+        if typeof opts == 'function'
+            callb = opts
+            opts = null
+        opts = opts ? {ack: false, prefetchCount: 1}
+        throw new Error('Opts is not an object') unless opts or typeof opts != 'object'
+        throw new Error('Callback is not a function') unless callb or typeof callb != 'function'
+        @unsubscribe().then =>
+            wrapper = =>
+                try
+                    callb.apply null, arguments
+                catch err
+                    log.error err
+            (@queue.subscribe opts, wrapper).addCallback (ok) =>
+                ctag = ok.consumerTag
+                @_ctag = ctag
+                log.info 'subscribed:', @qname, ctag
+                def.resolve this
+        .done()
+        def.promise
+
+    unsubscribe: =>
+        def = Q.defer()
+        unless @_ctag
+            def.resolve this
+            return def.promise
+        ctag = @_ctag
+        delete @_ctag
+        @queue.unsubscribe ctag
+        log.info 'unsubscribed:', @qname, ctag
+        def.resolve this
+        def.promise
+
+    shift: =>
+        @queue.shift.apply @queue, arguments
