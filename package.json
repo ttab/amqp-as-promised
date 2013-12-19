@@ -24,7 +24,7 @@
 	"dependencies": {
 		"q": "~0.9.7",
 		"amqp": "~0.1.8",
-		"bog": "0.0.5"
+		"bog": "1.0.0"
 	},
 	"devDependencies": {
 		"mocha": "~1.13.0",
