@@ -44,21 +44,21 @@ This is shorthand for binding and subscribing.
     amqpc.bind 'myexchange', 'mytopic.#', (msg, headers, del) ->
         console.log 'received message', msg
 
+To bind an anonymous queue.
+
+    amqpc.bind 'myexchange', '', 'mytopic.#', (msg, headers, del) ->
+        console.log 'received message', msg
+
+Or even shorter
+
+    amqpc.bind 'myexchange', 'mytopic.#', (msg, headers, del) ->
+        console.log 'received message', msg
+
 ## Using `amqpc` to get an anomymous queue
 
 To create an anomymous queue.
 
     amqpc.queue().then (q) -> console.log 'my queue', q
-
-To create an anonymous queue shorthand.
-
-    amqpc.bind('myexchange', '', 'mytopic.#').then (q) ->
-	    console.log 'queue created: ' + q.name
-
-Or even shorter
-
-    amqpc.bind('myexchange', 'mytopic.#').then (q) ->
-	    console.log 'queue created: ' + q.name
 
 ## Shutting down
 
