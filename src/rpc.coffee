@@ -1,4 +1,3 @@
-ampqc = require './amqp-client'
 Q     = require 'q'
 uuid  = require 'uuid'
 
@@ -16,9 +15,9 @@ module.exports = class Rpc
         @responses[corrId] = def
         return def
 
-    resolveResponse: (corrId, msg) =>
+    resolveResponse: (corrId, msg, headers) =>
         if @responses[corrId]? 
-            @responses[corrId].resolve msg
+            @responses[corrId].resolve [ msg, headers ]
             delete @responses[corrId]
     
     rpc: (exname, routingKey, msg, headers) =>

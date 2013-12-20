@@ -68,11 +68,10 @@ describe 'Rpc.resolveResponse()', ->
 	rpc = new Rpc new Amqpc
 
 	def = rpc.registerResponse '1234'
-	res = 'hello, world'
-	rpc.resolveResponse '1234', res
+	rpc.resolveResponse '1234', 'hello, world', { header1: 'value1' }
 
 	it 'should resolve the promise', ->
-		def.promise.should.eventually.equal 'hello, world'
+		def.promise.should.eventually.eql [ 'hello, world', { header1: 'value1' } ]
 
 	it 'should remove the deferred from the response list', ->
 		rpc.responses.should.not.have.property '1234'
@@ -104,5 +103,5 @@ describe 'Rpc.rpc()', ->
 	it 'should use something like a uuid as corrId', ->
 		Object.keys(rpc.responses)[0].should.match /^\w{8}-/
 	it 'should properly resolve the promise with resolveResponse()', ->
-		promise.should.eventually.equal 'solved!'
-		rpc.resolveResponse Object.keys(rpc.responses)[0], 'solved!'
+		rpc.resolveResponse Object.keys(rpc.responses)[0], 'solved!', {}
+		promise.should.eventually.eql [ 'solved!', {} ]
