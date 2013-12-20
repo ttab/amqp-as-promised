@@ -68,10 +68,14 @@ describe 'Rpc.resolveResponse()', ->
  
 describe 'Rpc.rpc()', ->
 	exchange = new Exchange
-	_publish = sinon.mock(exchange).expects('publish').withArgs('world', 'msg')
+	_publish = sinon.mock(exchange).expects('publish').withArgs('world', 'msg',
+		{ replyTo: 'q123', headers: undefined })
+
+	queue = new Queue
+	queue.name = 'q123'
 		
 	amqpc = new Amqpc
-	sinon.mock(amqpc).expects('queue').returns Q.fcall -> new Queue
+	sinon.mock(amqpc).expects('queue').returns Q.fcall -> queue
 	_exchange = sinon.mock(amqpc).expects('exchange').withArgs('hello').returns(Q.fcall -> exchange)
 
 	rpc = new Rpc amqpc

@@ -4,7 +4,8 @@ Q     = require 'q'
 module.exports = class Rpc
     constructor: (@amqpc) ->
         @responses = {}
-        @amqpc.queue('', { autoDelete: true, exclusive: true}).then (returnChannel) =>
+        @returnChannel = @amqpc.queue('', { autoDelete: true, exclusive: true})
+        @returnChannel.then (returnChannel) =>
             returnChannel.subscribe (msg, headers, deliveryInfo) =>
                 resolveResponse deliveryInfo.correlationId, msg
 
@@ -19,8 +20,12 @@ module.exports = class Rpc
             delete @responses[corrId]
     
     rpc: (exname, routingKey, msg, headers) =>
-        @amqpc.exchange(exname).then (ex) =>
+        Q.all([
+            @amqpc.exchange(exname),
+            @returnChannel
+        ]).spread (ex, q) =>
             def = @registerResponse '1234'
             ex.publish routingKey, msg,
+                replyTo: q.name
                 headers: headers
             def.promise
