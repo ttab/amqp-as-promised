@@ -4,6 +4,7 @@ mochaAsPromised = require 'mocha-as-promised'
 sinon           = require 'sinon'
 sinonChai       = require 'sinon-chai'
 Q               = require 'q'
+uuid            = require 'uuid'
 
 expect = chai.expect
 should = chai.should()
@@ -68,8 +69,8 @@ describe 'Rpc.resolveResponse()', ->
  
 describe 'Rpc.rpc()', ->
 	exchange = new Exchange
-	_publish = sinon.mock(exchange).expects('publish').withArgs('world', 'msg',
-		{ replyTo: 'q123', headers: undefined })
+	_publish = sinon.mock(exchange).expects('publish').withArgs 'world', 'msg',
+		sinon.match({ replyTo: 'q123', headers: undefined }).and(sinon.match.has('correlationId'))
 
 	queue = new Queue
 	queue.name = 'q123'
@@ -87,6 +88,8 @@ describe 'Rpc.rpc()', ->
 		_publish.verify()
 	it 'should add exactly one corrId/deferred mapping', ->
 		Object.keys(rpc.responses).should.have.length 1
+	it 'should use something like a uuid as corrId', ->
+		Object.keys(rpc.responses)[0].should.match /^\w{8}-/
 	it 'should properly resolve the promise with resolveResponse()', ->
 		promise.should.eventually.equal 'solved!'
 		rpc.resolveResponse Object.keys(rpc.responses)[0], 'solved!'

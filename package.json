@@ -26,7 +26,8 @@
     "amqp": "~0.1.8",
     "bog": "0.0.5",
     "sinon": "~1.7.3",
-    "sinon-chai": "~2.4.0"
+    "sinon-chai": "~2.4.0",
+    "uuid": "~1.4.1"
   },
   "devDependencies": {
     "mocha": "~1.13.0",

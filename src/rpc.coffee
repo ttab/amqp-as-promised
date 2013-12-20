@@ -1,5 +1,6 @@
 ampqc = require './amqp-client'
 Q     = require 'q'
+uuid  = require 'uuid'
 
 module.exports = class Rpc
     constructor: (@amqpc) ->
@@ -24,8 +25,10 @@ module.exports = class Rpc
             @amqpc.exchange(exname),
             @returnChannel
         ]).spread (ex, q) =>
-            def = @registerResponse '1234'
+            id = uuid.v4()
+            def = @registerResponse id
             ex.publish routingKey, msg,
                 replyTo: q.name
+                correlationId: id
                 headers: headers
             def.promise
