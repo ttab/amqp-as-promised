@@ -8,7 +8,8 @@ module.exports = class Rpc
         @returnChannel = @amqpc.queue('', { autoDelete: true, exclusive: true})
         @returnChannel.then (returnChannel) =>
             returnChannel.subscribe (msg, headers, deliveryInfo) =>
-                resolveResponse deliveryInfo.correlationId, msg
+                if deliveryInfo?
+                    @resolveResponse deliveryInfo.correlationId, msg
 
     registerResponse: (corrId) =>
         def = Q.defer()

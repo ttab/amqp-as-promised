@@ -37,6 +37,19 @@ describe 'the Rpc constructor', ->
 	it 'should subscribe to the return channel', ->
 		_subscribe.verify()
 
+describe 'the subscription callback', ->
+	it 'should in turn invoke resolveResponse()', (done) ->
+		channel = new Queue
+		channel.subscribe = (callback) ->
+			setTimeout (-> callback({}, {}, { correlationId: '1234' })), 100
+
+		amqpc = { queue: -> Q.fcall -> channel }
+		
+		rpc = new Rpc amqpc
+		rpc.resolveResponse = (corrId, msg) ->
+			expect(corrId).to.equal '1234'
+			done()
+		
 describe 'Rpc.registerResponse()', ->
 	rpc = new Rpc new Amqpc
 
