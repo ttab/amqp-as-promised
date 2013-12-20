@@ -1,35 +1,39 @@
 {
-	"name": "amqp-as-promised",
-	"description": "Promise wrappers for node-amqp",
-	"version": "0.0.6",
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/ttab/amqp-as-promised"
-	},
-	"main": "lib/amqp-client",
-	"scripts": {
-		"test": "cake test",
-		"prepublish": "cake dist"
-	},
-	"keywords": [
-		"amqp",
-		"promises",
-		"q"
-	],
-	"author": "Martin Algesten <martin@algesten.se>",
-	"contributors": [
-		"Fredrik Appelberg <fredrik.appelberg@tt.se>"
-	],
-	"license": "MIT",
-	"dependencies": {
-		"q": "~0.9.7",
-		"amqp": "~0.1.8",
-		"bog": "0.0.5"
-	},
-	"devDependencies": {
-		"mocha": "~1.13.0",
-		"chai": "~1.8.1",
-		"cake": "~0.1.1",
-		"coffee-script": "~1.6.3"
-	}
+  "name": "amqp-as-promised",
+  "description": "Promise wrappers for node-amqp",
+  "version": "0.0.6",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ttab/amqp-as-promised"
+  },
+  "main": "lib/amqp-client",
+  "scripts": {
+    "test": "cake test",
+    "prepublish": "cake dist"
+  },
+  "keywords": [
+    "amqp",
+    "promises",
+    "q"
+  ],
+  "author": "Martin Algesten <martin@algesten.se>",
+  "contributors": [
+    "Fredrik Appelberg <fredrik.appelberg@tt.se>"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "q": "~0.9.7",
+    "amqp": "~0.1.8",
+    "bog": "0.0.5",
+    "sinon": "~1.7.3",
+    "sinon-chai": "~2.4.0"
+  },
+  "devDependencies": {
+    "mocha": "~1.13.0",
+    "mocha-as-promised": "~2.0.0",
+    "chai": "~1.8.1",
+    "chai-as-promised": "~4.1.0",
+    "cake": "~0.1.1",
+    "coffee-script": "~1.6.3"
+  }
 }
