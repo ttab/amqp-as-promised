@@ -3,7 +3,7 @@ Rpc = new require './rpc'
 
 # facade that ties together the various pieces
 module.exports = (conf) ->
-    amqpc = amqpClient amqp
+    amqpc = amqpClient conf
     rpc = new Rpc amqpc
 
     {
