@@ -60,6 +60,13 @@ To create an anomymous queue.
 
     amqpc.queue().then (q) -> console.log 'my queue', q
 
+## Using `amqpc` to to RPC-style calls
+
+To send a message to a service that honors the replyTo/correlationId contract:
+
+    amqpc.rpc('myexchange', 'routing.key', msg, [headers]).then ([msg, headers]) ->
+	    console.log 'received message', msg
+
 ## Shutting down
 
     graceful = (opts) ->
