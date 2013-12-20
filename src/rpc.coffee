@@ -4,11 +4,15 @@ uuid  = require 'uuid'
 module.exports = class Rpc
     constructor: (@amqpc) ->
         @responses = {}
-        @returnChannel = @amqpc.queue('', { autoDelete: true, exclusive: true})
-        @returnChannel.then (returnChannel) =>
-            returnChannel.subscribe (msg, headers, deliveryInfo) =>
-                if deliveryInfo?
-                    @resolveResponse deliveryInfo.correlationId, msg
+
+    returnChannel: =>
+        if !@_returnChannel
+            @_returnChannel = @amqpc.queue('', { autoDelete: true, exclusive: true})
+            @_returnChannel.then (q) =>
+                q.subscribe (msg, headers, deliveryInfo) =>
+                    if deliveryInfo?
+                        @resolveResponse deliveryInfo.correlationId, msg
+        return @_returnChannel
 
     registerResponse: (corrId) =>
         def = Q.defer()
@@ -23,7 +27,7 @@ module.exports = class Rpc
     rpc: (exname, routingKey, msg, headers) =>
         Q.all([
             @amqpc.exchange(exname),
-            @returnChannel
+            @returnChannel()
         ]).spread (ex, q) =>
             id = uuid.v4()
             def = @registerResponse id

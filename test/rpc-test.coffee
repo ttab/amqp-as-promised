@@ -25,17 +25,32 @@ class Amqpc
 	queue: -> Q.fcall -> new Queue
 
 describe 'the Rpc constructor', ->
-	channel = new Queue
-	_subscribe = sinon.mock(channel).expects('subscribe').returns(null)
 	amqpc = new Amqpc
-	_queue = sinon.mock(amqpc).expects('queue').returns Q.fcall -> channel
-	
+	_queue = sinon.mock(amqpc).expects('queue').never()
 	rpc = new Rpc amqpc
 	
-	it 'should call create a return channel', ->
+	it 'should not start the return channel', ->
+		expect(rpc._returnChannel).to.be.undefined
+		_queue.verify
+		
+describe 'Rpc.returnChannel()', ->
+	channel = new Queue
+	_subscribe = sinon.mock(channel).expects('subscribe').once()
+	amqpc = new Amqpc
+	_queue = sinon.mock(amqpc).expects('queue').once().returns Q.fcall -> channel
+	
+	rpc = new Rpc amqpc
+
+	c1 = rpc.returnChannel()
+	c2 = rpc.returnChannel()
+	it 'should create a _returnChannel member', ->
+		expect(rpc).to.have.property '_returnChannel'
+	it 'should call amqpc.queue()', ->
 		_queue.verify()
-	it 'should subscribe to the return channel', ->
+	it 'should add a subscription callback', ->
 		_subscribe.verify()
+	it 'should return the same value over multiple invocations', ->
+		c1.should.eql c2
 
 describe 'the subscription callback', ->
 	it 'should in turn invoke resolveResponse()', (done) ->
@@ -46,6 +61,7 @@ describe 'the subscription callback', ->
 		amqpc = { queue: -> Q.fcall -> channel }
 		
 		rpc = new Rpc amqpc
+		rpc.returnChannel()
 		rpc.resolveResponse = (corrId, msg) ->
 			expect(corrId).to.equal '1234'
 			done()
