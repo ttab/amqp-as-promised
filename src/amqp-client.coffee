@@ -1,5 +1,5 @@
-log = require 'bog'
-Q = require 'q'
+log  = require 'bog'
+Q    = require 'q'
 amqp = require 'amqp'
 
 module.exports = (conf) ->
@@ -123,8 +123,8 @@ module.exports = (conf) ->
         queue: queue
         bind: bind
         shutdown: shutdown
-        local: conf.local
     }
+
 
 # Queue wrapper that only exposes that which we want to exposes in a promise manner
 class QueueWrapper

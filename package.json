@@ -6,7 +6,7 @@
     "type": "git",
     "url": "https://github.com/ttab/amqp-as-promised"
   },
-  "main": "lib/amqp-client",
+  "main": "lib/index",
   "scripts": {
     "test": "cake test",
     "prepublish": "cake dist"
