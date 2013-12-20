@@ -4,8 +4,9 @@ Q     = require 'q'
 module.exports = class Rpc
     constructor: (@amqpc) ->
         @responses = {}
-        @amqpc.queue('', { autoDelete: true, exclusive: true}).then (returnChannel) ->
-            returnChannel.subscribe () ->
+        @amqpc.queue('', { autoDelete: true, exclusive: true}).then (returnChannel) =>
+            returnChannel.subscribe (msg, headers, deliveryInfo) =>
+                resolveResponse deliveryInfo.correlationId, msg
 
     registerResponse: (corrId) =>
         def = Q.defer()

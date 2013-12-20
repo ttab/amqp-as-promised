@@ -25,16 +25,16 @@ class Amqpc
 
 describe 'the Rpc constructor', ->
 	channel = new Queue
-	_channel = sinon.mock(channel).expects('subscribe').returns(null)
+	_subscribe = sinon.mock(channel).expects('subscribe').returns(null)
 	amqpc = new Amqpc
-	_exchange = sinon.mock(amqpc).expects('queue').returns Q.fcall -> channel
+	_queue = sinon.mock(amqpc).expects('queue').returns Q.fcall -> channel
 	
 	rpc = new Rpc amqpc
 	
 	it 'should call create a return channel', ->
-		_exchange.verify()
+		_queue.verify()
 	it 'should subscribe to the return channel', ->
-		_channel.verify()
+		_subscribe.verify()
 
 describe 'Rpc.registerResponse()', ->
 	rpc = new Rpc new Amqpc
@@ -65,7 +65,7 @@ describe 'Rpc.resolveResponse()', ->
 
 	it 'should handle non-existand corrIds gracefully', ->
 		rpc.resolveResponse '9999', {}
-
+ 
 describe 'Rpc.rpc()', ->
 	exchange = new Exchange
 	_publish = sinon.mock(exchange).expects('publish').withArgs('world', 'msg')
@@ -81,3 +81,8 @@ describe 'Rpc.rpc()', ->
 		promise.should.have.property 'then'
 	it 'should call exchange.publish()', ->
 		_publish.verify()
+	it 'should add exactly one corrId/deferred mapping', ->
+		Object.keys(rpc.responses).should.have.length 1
+	it 'should properly resolve the promise with resolveResponse()', ->
+		promise.should.eventually.equal 'solved!'
+		rpc.resolveResponse Object.keys(rpc.responses)[0], 'solved!'
