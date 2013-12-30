@@ -1,6 +1,8 @@
 AMQP as Promised
 ================
 
+[![Build Status](https://ci.tt.se/jenkins/buildStatus/icon?job=amqp-as-promised)](https://ci.tt.se/jenkins/job/amqp-as-promised/)
+
 Promise wrapper around [node-amqp](https://github.com/postwait/node-amqp).
 
 ## Installing
