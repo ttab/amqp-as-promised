@@ -31,8 +31,7 @@ module.exports = class Rpc
         ]).spread (ex, q) =>
             id = uuid.v4()
             def = @registerResponse id
-            ex.publish routingKey, msg,
-                replyTo: q.name
-                correlationId: id
-                headers: headers
+            opts = { replyTo: q.name, correlationId: id }
+            opts.headers = headers if headers?
+            ex.publish routingKey, msg, opts
             def.promise

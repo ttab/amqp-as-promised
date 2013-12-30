@@ -95,10 +95,10 @@ describe 'Rpc.resolveResponse()', ->
 	it 'should handle non-existand corrIds gracefully', ->
 		rpc.resolveResponse '9999', {}
  
-describe 'Rpc.rpc()', ->
+describe 'Rpc.rpc() called with headers', ->
 	exchange = new Exchange
 	_publish = sinon.mock(exchange).expects('publish').withArgs 'world', 'msg',
-		sinon.match({ replyTo: 'q123', headers: undefined }).and(sinon.match.has('correlationId'))
+		sinon.match({ replyTo: 'q123', headers: { 'customHeader', 'header1' } }).and(sinon.match.has('correlationId'))
 
 	queue = new Queue
 	queue.name = 'q123'
@@ -108,7 +108,7 @@ describe 'Rpc.rpc()', ->
 	_exchange = sinon.mock(amqpc).expects('exchange').withArgs('hello').returns(Q.fcall -> exchange)
 
 	rpc = new Rpc amqpc
-	promise = rpc.rpc('hello', 'world', 'msg')
+	promise = rpc.rpc('hello', 'world', 'msg', { 'customHeader', 'header1' })
 
 	it 'should return a promise', ->
 		promise.should.have.property 'then'
@@ -118,6 +118,46 @@ describe 'Rpc.rpc()', ->
 		Object.keys(rpc.responses).should.have.length 1
 	it 'should use something like a uuid as corrId', ->
 		Object.keys(rpc.responses)[0].should.match /^\w{8}-/
+	it 'should properly resolve the promise with resolveResponse()', ->
+		rpc.resolveResponse Object.keys(rpc.responses)[0], 'solved!', {}
+		promise.should.eventually.eql [ 'solved!', {} ]
+
+describe 'Rpc.rpc() called without headers', ->
+	exchange = new Exchange
+	_publish = sinon.mock(exchange).expects('publish').withArgs 'world', 'msg',
+		sinon.match({ replyTo: 'q123' }).and(sinon.match (val) -> val.correlationId? and Object.keys(val).indexOf('headers') == -1)
+
+	queue = { name: 'q123' }
+		
+	amqpc =
+		queue: -> Q.fcall -> queue
+		exchange: -> Q.fcall -> exchange
+
+	rpc = new Rpc amqpc
+	promise = rpc.rpc('hello', 'world', 'msg')
+
+	it 'should still result in a published message', ->
+		_publish.verify()
+	it 'should properly resolve the promise with resolveResponse()', ->
+		rpc.resolveResponse Object.keys(rpc.responses)[0], 'solved!', {}
+		promise.should.eventually.eql [ 'solved!', {} ]
+
+describe 'Rpc.rpc() called without msg object', ->
+	exchange = new Exchange
+	_publish = sinon.mock(exchange).expects('publish').withArgs 'world', undefined,
+		sinon.match({ replyTo: 'q123' }).and(sinon.match (val) -> val.correlationId? and Object.keys(val).indexOf('headers') == -1)
+
+	queue = { name: 'q123' }
+		
+	amqpc =
+		queue: -> Q.fcall -> queue
+		exchange: -> Q.fcall -> exchange
+
+	rpc = new Rpc amqpc
+	promise = rpc.rpc('hello', 'world')
+
+	it 'should still result in a published message', ->
+		_publish.verify()
 	it 'should properly resolve the promise with resolveResponse()', ->
 		rpc.resolveResponse Object.keys(rpc.responses)[0], 'solved!', {}
 		promise.should.eventually.eql [ 'solved!', {} ]
