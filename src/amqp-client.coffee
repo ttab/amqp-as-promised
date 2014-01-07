@@ -77,11 +77,12 @@ module.exports = (conf) ->
         qname = '' if not qname
         def = Q.defer()
         (Q.all [(exchange exname), (queue qname)]).spread (ex, q) ->
-            q.bind ex, topic
-        .then (q) ->
-            q.subscribe callback
-        .then ->
-            def.resolve qname
+            Q.fcall ->
+                q.bind ex, topic
+            .then (q) ->
+                q.subscribe callback
+            .then ->
+                def.resolve q.name
         .done()
         def.promise
 
