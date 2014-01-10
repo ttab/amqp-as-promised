@@ -43,7 +43,7 @@ Promise wrapper around [node-amqp](https://github.com/postwait/node-amqp).
 
 This is shorthand for binding and subscribing.
 
-    amqpc.bind 'myexchange', 'mytopic.#', (msg, headers, del) ->
+    amqpc.bind 'myexchange', 'myqueue', 'mytopic.#', (msg, headers, del) ->
         console.log 'received message', msg
 
 To bind an anonymous queue.
