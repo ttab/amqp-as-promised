@@ -12,5 +12,5 @@ module.exports = (conf) ->
         bind: amqpc.bind
         rpc: rpc.rpc
         shutdown: amqpc.shutdown
-        local: conf.local
+        local: amqpc.local
     }

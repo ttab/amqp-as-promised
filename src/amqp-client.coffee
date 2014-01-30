@@ -4,13 +4,14 @@ amqp = require 'amqp'
 
 module.exports = (conf) ->
 
-    log.info("conf.local=true means no amqp connection") if conf.local
+    local = conf.local || process.env.LOCAL
+    log.info("local means no amqp connection") if local
 
     isShutdown = null
 
     conn = do ->
         # disable if local
-        return Q(local:true) if conf.local
+        return Q(local:true) if local
         log.info "Connecting", conf
         def = Q.defer()
         # amqp connection
@@ -27,11 +28,12 @@ module.exports = (conf) ->
                 log.warn 'amqp connection failed:', err
             else if def.promise.isFulfilled()
                 unless isShutdown
-                    log.warn 'amqp connection failed:', (if err.message then err.message else err)
+                    log.warn 'amqp connection failed:',
+                        (if err.message then err.message else err)
         def.promise
 
     exchange = (name, opts) ->
-        throw new Error 'Unable connect exchange when conf.local = true' if conf.local
+        throw new Error 'Unable connect exchange when local' if local
         throw new Error 'Unable connect exchange when shutdown' if isShutdown
         def = Q.defer()
         conn.then (mq) ->
@@ -47,7 +49,7 @@ module.exports = (conf) ->
         def.promise
 
     queue = (qname, opts) ->
-        throw new Error 'Unable to connect queue when conf.local = true' if conf.local
+        throw new Error 'Unable to connect queue when local' if local
         throw new Error 'Unable to connect queue shutdown' if isShutdown
         if qname != null and typeof qname == 'object'
             opts = qname
@@ -68,7 +70,7 @@ module.exports = (conf) ->
         def.promise
 
     bind = (exname, qname, topic, callback) ->
-        throw new Error 'Unable to bind when conf.local = true' if conf.local
+        throw new Error 'Unable to bind when local' if local
         throw new Error 'Unable to bind when shutdown' if isShutdown
         if typeof topic == 'function'
             callback = topic
@@ -124,6 +126,7 @@ module.exports = (conf) ->
         queue: queue
         bind: bind
         shutdown: shutdown
+        local: local
     }
 
 
