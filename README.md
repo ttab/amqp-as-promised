@@ -62,12 +62,27 @@ To create an anomymous queue.
 
     amqpc.queue().then (q) -> console.log 'my queue', q
 
-## Using `amqpc` to to RPC-style calls
+## Using `amqpc` to do RPC-style calls
 
 To send a message to a service that honors the replyTo/correlationId contract:
 
     amqpc.rpc('myexchange', 'routing.key', msg, [headers]).then ([msg, headers]) ->
 	    console.log 'received message', msg
+
+## Using `amqpc` to serve RPC-style calls
+
+To set up a message consumer that automatically honors the
+replyTo/correlationId contrat:
+
+    amqpc.serve 'myexchange', 'mytopic.#', (msg, headers, del) ->
+	    return { result: 'ok' }
+
+The value returned from the handler will be sent back on the queue
+specified by the `replyTo` header, with the `correlationId` set.
+
+If an exception is thrown by the handler, it will be propagated back
+to the client as an object with a `error` property containing the
+error message.
 
 ## Shutting down
 
