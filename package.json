@@ -35,6 +35,6 @@
         "sinon": "~1.7.3",
         "sinon-chai": "~2.4.0",
         "cake": "~0.1.1",
-        "coffee-script": "~1.6.3"
+        "coffee-script": "~1.7.1"
     }
 }
