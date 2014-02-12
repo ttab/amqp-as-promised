@@ -82,7 +82,8 @@ module.exports = (conf) ->
             Q.fcall ->
                 q.bind ex, topic
             .then (q) ->
-                q.subscribe callback
+                if callback?
+                    q.subscribe callback
             .then ->
                 def.resolve q.name
         .done()
