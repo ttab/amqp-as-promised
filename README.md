@@ -56,6 +56,10 @@ Or even shorter
     amqpc.bind 'myexchange', 'mytopic.#', (msg, headers, del) ->
         console.log 'received message', msg
 
+To bind the queue to the exchange without subscribing to it, skip the last parameter (the subscription callback). This is essentially the same as `queue.bind myexchange, 'mytopic'`, except the exchange and queue are specified by their names:
+
+    amqpc.bind 'myexchange', 'myqueue', 'mytopic.#'
+
 ## Using `amqpc` to get an anomymous queue
 
 To create an anomymous queue.
@@ -106,7 +110,7 @@ A promise for a queue. If `qname` is omitted, `""` is used. If opts is
 omitted a default `durable:true` and `autoDelete:(qname=='')`. See
 `queue.*` below.
 
-### `amqpc.bind(exname, qname, topic, callback)`
+### `amqpc.bind(exname, qname, topic[, callback])`
 
 Shorthand for
 
@@ -115,7 +119,7 @@ Shorthand for
 2. Looking up queue for `qname`. See `amqpc.queue` for queue default
    opts.
 3. Binding queue to `topic`.
-4. Subscribing `callback` to queue.
+4. Subscribing `callback` to queue (optional).
 
 ### `amqpc.shutdown()`
 
