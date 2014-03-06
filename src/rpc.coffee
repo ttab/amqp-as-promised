@@ -25,6 +25,7 @@ module.exports = class Rpc
             delete @responses[corrId]
 
     rpc: (exname, routingKey, msg, headers) =>
+        throw new Error 'Must provide msg' unless msg
         Q.all([
             @amqpc.exchange(exname),
             @returnChannel()

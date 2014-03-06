@@ -143,21 +143,12 @@ describe 'Rpc.rpc() called without headers', ->
         promise.should.eventually.eql [ 'solved!', {} ]
 
 describe 'Rpc.rpc() called without msg object', ->
-    exchange = new Exchange
-    _publish = sinon.mock(exchange).expects('publish').withArgs 'world', undefined,
-        sinon.match({ replyTo: 'q123' }).and(sinon.match (val) -> val.correlationId? and Object.keys(val).indexOf('headers') == -1)
-
-    queue = { name: 'q123' }
 
     amqpc =
         queue: -> Q.fcall -> queue
         exchange: -> Q.fcall -> exchange
 
     rpc = new Rpc amqpc
-    promise = rpc.rpc('hello', 'world')
 
-    it 'should still result in a published message', ->
-        _publish.verify()
-    it 'should properly resolve the promise with resolveResponse()', ->
-        rpc.resolveResponse Object.keys(rpc.responses)[0], 'solved!', {}
-        promise.should.eventually.eql [ 'solved!', {} ]
+    it 'should throw an error', ->
+        expect(-> rpc.rpc('foo','bar')).to.throw 'Must provide msg'
