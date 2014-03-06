@@ -17,8 +17,8 @@ describe 'RpcBackend.serve()', ->
     ex = { name: 'hello' }
     qu = { bind: stub(), subscribe: stub() }
     def = {}
-            
-    amqpc = 
+
+    amqpc =
         exchange: stub()
         queue: stub().returns Q.fcall -> qu
         bind: stub()
@@ -47,7 +47,7 @@ describe 'RpcBackend._mkcallback()', ->
 
     rpc = new RpcBackend {}
     callback = rpc._mkcallback exchange, handler
-    
+
     it 'should return callback function', ->
         callback.should.be.a.func
 
@@ -63,12 +63,12 @@ describe 'RpcBackend._mkcallback()', ->
     handler = stub().returns Q.fcall -> throw new Error('error msg')
     _error = log.error
     log.error = ->
-    
+
     rpc = new RpcBackend {}
     callback = rpc._mkcallback exchange, handler
 
     callback 'msg', { hello: 'world' }, { correlationId: '1234', replyTo: 'reply'}
-    
+
     it 'should pass errors thrown by the handler on to the client', ->
         exchange.publish.should.have.been.calledWith 'reply', { error: 'error msg'}, match.object
         log.error = _error
@@ -76,11 +76,11 @@ describe 'RpcBackend._mkcallback()', ->
 describe 'RpcBackend._mkcallback()', ->
     exchange = { publish: stub() }
     handler = stub()
-    
+
     rpc = new RpcBackend {}
     callback = rpc._mkcallback exchange, handler
 
     callback 'msg', { hello: 'world' }, { correlationId: '1234'}
-    
+
     it 'should refuse messages without replyTo', ->
         exchange.publish.should.not.have.been.called

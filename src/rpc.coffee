@@ -20,10 +20,10 @@ module.exports = class Rpc
         return def
 
     resolveResponse: (corrId, msg, headers) =>
-        if @responses[corrId]? 
+        if @responses[corrId]?
             @responses[corrId].resolve [ msg, headers ]
             delete @responses[corrId]
-    
+
     rpc: (exname, routingKey, msg, headers) =>
         Q.all([
             @amqpc.exchange(exname),

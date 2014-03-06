@@ -9,5 +9,5 @@ chaiAsPromised = require('chai-as-promised')
 chai.use chaiAsPromised
 
 describe 'trivial test', ->
-	it 'is trivial', ->
-		true.should.be.true
+    it 'is trivial', ->
+        true.should.be.true
