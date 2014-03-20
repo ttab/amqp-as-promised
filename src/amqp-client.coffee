@@ -111,7 +111,10 @@ module.exports = (conf) ->
         def = isShutdown = Q.defer()
         conn.then (mq) ->
             return def.resolve true if mq.local
-            Q.all(unbind qname for qname, qp of mq._ttQueues)
+            todo = for qname, qp of mq._ttQueues
+                qp.then (queue) ->
+                    unbind qname if queue.isAutoDelete()
+            Q.all(todo)
             .then ->
                 log.info 'closing amqp connection'
                 # compensate for utterly broken reconnect code
@@ -200,6 +203,10 @@ class QueueWrapper
         log.info 'unsubscribed:', @name, ctag
         def.resolve this
         def.promise
+
+    isDurable: => @queue.options.durable
+
+    isAutoDelete: => @queue.options.autoDelete
 
     shift: =>
         @queue.shift.apply @queue, arguments
