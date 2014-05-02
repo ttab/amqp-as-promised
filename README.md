@@ -22,9 +22,16 @@ format.
 
 ### `connection`
 
-* Connection settings accepted by
+Connection settings accepted by
 [node-amqp](https://github.com/postwait/node-amqp#connection-options-and-url). You
-need to specify either `host`, `vhost`, `login`, `password` or `url`.
+need to at minimum specify either
+* `host`
+* `vhost`
+* `login`
+* `password`
+
+or
+* `url`.
 
 ### `local`
 
@@ -101,7 +108,7 @@ to send a message to a service that honors the replyTo/correlationId contract:
 
 
 *Note!* In earlier versions the response was an array that included
- the response headers. As of version 0.1, this is no longer the case.
+ the response headers. As of version 0.1.0, this is no longer the case.
 
 ## Using `amqpc` to serve RPC-style calls
 
