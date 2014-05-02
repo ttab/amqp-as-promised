@@ -1,15 +1,12 @@
-chai            = require 'chai'
-chaiAsPromised  = require 'chai-as-promised'
-sinonChai       = require 'sinon-chai'
-Q               = require 'q'
-uuid            = require 'uuid'
-
-{ spy, stup, mock, match } = require 'sinon'
-
+chai   = require 'chai'
+Q      = require 'q'
+uuid   = require 'uuid'
 expect = chai.expect
 should = chai.should()
-chai.use chaiAsPromised
-chai.use sinonChai
+
+chai.use(require 'sinon-chai')
+chai.use(require 'chai-as-promised')
+{ spy, stub, mock, match } = require 'sinon'
 
 Rpc = require '../src/rpc'
 

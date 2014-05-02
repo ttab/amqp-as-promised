@@ -81,7 +81,7 @@ class QueueWrapper
 
 
 module.exports = (conf) ->
-
+        
     local = conf.local || process.env.LOCAL
     log.info("local means no amqp connection") if local
 
@@ -90,10 +90,10 @@ module.exports = (conf) ->
     conn = do ->
         # disable if local
         return Q(local:true) if local
-        log.info "Connecting", conf
+        log.info "Connecting", conf.connection
         def = Q.defer()
         # amqp connection
-        mq = amqp.createConnection conf
+        mq = amqp.createConnection conf.connection
         mq._ttQueues = mq._ttQueues ? {}
         mq.on 'ready', (ev) ->
             log.info 'amqp connection ready'

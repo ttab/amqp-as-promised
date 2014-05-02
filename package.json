@@ -1,39 +1,40 @@
 {
-    "name": "amqp-as-promised",
-    "description": "Promise wrappers for node-amqp",
-    "version": "0.1.0",
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/ttab/amqp-as-promised"
-    },
-    "main": "lib/index",
-    "scripts": {
-        "test": "mocha",
-        "prepublish": "rm -rf lib & ./node_modules/.bin/coffee -o lib/ -c src/ & mocha --reporter spec"
-    },
-    "keywords": [
-        "amqp",
-        "promises",
-        "q"
-    ],
-    "author": "Martin Algesten <martin@algesten.se>",
-    "contributors": [
-        "Fredrik Appelberg <fredrik.appelberg@tt.se>"
-    ],
-    "license": "MIT",
-    "dependencies": {
-        "q": "~1.0.0",
-        "amqp": "~0.1.8",
-        "uuid": "~1.4.1",
-        "bog": "1.0.0",
-        "mem-cache": "0.0.3"
-    },
-    "devDependencies": {
-        "mocha": "~1.18.2",
-        "chai": "~1.9.0",
-        "chai-as-promised": "~4.1.1",
-        "sinon": "~1.8.2",
-        "sinon-chai": "~2.5.0",
-        "coffee-script": "~1.7.1"
-    }
+  "name": "amqp-as-promised",
+  "description": "Promise wrappers for node-amqp",
+  "version": "0.1.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ttab/amqp-as-promised"
+  },
+  "main": "lib/index",
+  "scripts": {
+    "test": "mocha",
+    "prepublish": "rm -rf lib & ./node_modules/.bin/coffee -o lib/ -c src/ & mocha --reporter spec"
+  },
+  "keywords": [
+    "amqp",
+    "promises",
+    "q"
+  ],
+  "author": "Martin Algesten <martin@algesten.se>",
+  "contributors": [
+    "Fredrik Appelberg <fredrik.appelberg@tt.se>"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "q": "~1.0.0",
+    "amqp": "~0.1.8",
+    "uuid": "~1.4.1",
+    "bog": "1.0.0",
+    "mem-cache": "0.0.3"
+  },
+  "devDependencies": {
+    "mocha": "~1.18.2",
+    "chai": "~1.9.0",
+    "chai-as-promised": "~4.1.1",
+    "sinon": "~1.8.2",
+    "sinon-chai": "~2.5.0",
+    "coffee-script": "~1.7.1",
+    "proxyquire": "~0.6.0"
+  }
 }

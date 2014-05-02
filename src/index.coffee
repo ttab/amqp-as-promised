@@ -4,8 +4,11 @@ RpcBackend = require './rpc-backend'
 
 # facade that ties together the various pieces
 module.exports = (conf) ->
+    # Support old-style configuration
+    conf = { connection: conf, local: conf.local } if not conf.connection
+        
     amqpc      = amqpClient conf
-    rpc        = new Rpc amqpc
+    rpc        = new Rpc amqpc, conf.rpc
     rpcBackend = new RpcBackend amqpc
 
     {

@@ -16,6 +16,10 @@ Promise wrapper around [node-amqp](https://github.com/postwait/node-amqp).
 
 ## Config parameters
 
+As of version 0.1.0, the following config parameters are accepted,
+although we also try to keep backwards compatibility with the older
+format.
+
 ### `connection`
 
 * Connection settings accepted by
@@ -24,11 +28,11 @@ need to specify either `host`, `vhost`, `login`, `password` or `url`.
 
 ### `local`
 
-If true, means there will be no AMQP connection.
+If true, means there will be no AMQP connection. Default: false
 
 ### `rpc`
 
-* `timeout`: timeout in ms for rpc calls
+* `timeout`: timeout in ms for rpc calls. Default: 1000ms
 
 ## Example config
 
