@@ -16,12 +16,23 @@ Promise wrapper around [node-amqp](https://github.com/postwait/node-amqp).
 
 ## Config parameters
 
-### `amqp`
+### `connection`
 
-* Connection settings for RabbitMQ. `host`, `vhost`, `login`, `password` specifies how to connect.
-* `local`: means there will be no AMQP connection.
+* Connection settings accepted by [node-amqp]:https://github.com/postwait/node-amqp#connection-options-and-url
+  - `host`
+  - `vhost`
+  - `login`
+  - `password`
 
-## Example localhost config `conf-localhost.json`
+### `local`
+
+If true, means there will be no AMQP connection.
+
+### `rpc`
+
+* `timeout`: timeout in ms for rpc calls
+
+## Example localhost config
 
     {
         "amqp": {
@@ -29,7 +40,7 @@ Promise wrapper around [node-amqp](https://github.com/postwait/node-amqp).
             "vhost": "test",
             "login": "test",
             "password": "supersecret"
-        },
+        }
     }
 
 ## Using `amqpc` to publish
@@ -56,7 +67,10 @@ Or even shorter
     amqpc.bind 'myexchange', 'mytopic.#', (msg, headers, del) ->
         console.log 'received message', msg
 
-To bind the queue to the exchange without subscribing to it, skip the last parameter (the subscription callback). This is essentially the same as `queue.bind myexchange, 'mytopic'`, except the exchange and queue are specified by their names:
+To bind the queue to the exchange without subscribing to it, skip the
+last parameter (the subscription callback). This is essentially the
+same as `queue.bind myexchange, 'mytopic'`, except the exchange and
+queue are specified by their names:
 
     amqpc.bind 'myexchange', 'myqueue', 'mytopic.#'
 
@@ -70,8 +84,15 @@ To create an anomymous queue.
 
 to send a message to a service that honors the replyTo/correlationId contract:
 
-    amqpc.rpc('myexchange', 'routing.key', msg, [headers]).then (response) ->
+    amqpc.rpc('myexchange', 'routing.key', msg, [headers], [options]).then (response) ->
         console.log 'received message', response
+
+ * `headers` is an optional parameter holding any custom headers to be
+   passed on the RPC service.
+ * `options` supports the following settings
+   - `timeout` - the timeout in ms for this call
+
+
 
 *Note!* In earlier versions the response was an array that included
  the response headers. As of version 0.1, this is no longer the case.

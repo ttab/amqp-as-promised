@@ -158,3 +158,18 @@ describe 'Rpc.rpc() called without msg object', ->
 
     it 'should throw an error', ->
         expect(-> rpc.rpc('foo','bar')).to.throw 'Must provide msg'
+
+describe 'Rpc.rpc() called with a timeout option', ->
+    amqpc =
+        queue: -> Q { name: 'q123' }
+        exchange: -> Q new Exchange
+    rpc = new Rpc amqpc
+    spy rpc, 'registerResponse'
+
+    it 'should passs the timeout on to registerResponse()', ->
+        rpc.rpc('hello', 'world', 'msg', {}, { timeout: 23 }).then ->
+            rpc.registerResponse.should.have.been.calledWith match.string, 23
+        .fail ->
+            # noop
+    
+    

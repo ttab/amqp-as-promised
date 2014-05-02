@@ -18,9 +18,9 @@ module.exports = class Rpc
                         @resolveResponse deliveryInfo.correlationId, msg
         return @_returnChannel
 
-    registerResponse: (corrId) =>
+    registerResponse: (corrId, timeout) =>
         def = Q.defer()
-        @responses.set corrId, def
+        @responses.set corrId, def, timeout
         return def
 
     resolveResponse: (corrId, msg, headers) =>
@@ -28,14 +28,14 @@ module.exports = class Rpc
             @responses.get(corrId).resolve msg
             @responses.remove corrId
 
-    rpc: (exname, routingKey, msg, headers) =>
+    rpc: (exname, routingKey, msg, headers, options) =>
         throw new Error 'Must provide msg' unless msg
         Q.all([
             @amqpc.exchange(exname),
             @returnChannel()
         ]).spread (ex, q) =>
             id = uuid.v4()
-            def = @registerResponse id
+            def = @registerResponse id, options?.timeout
             opts = { replyTo: q.name, correlationId: id }
             opts.headers = headers if headers?
             ex.publish routingKey, msg, opts
