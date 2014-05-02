@@ -6,6 +6,8 @@ module.exports = class Rpc
     constructor: (@amqpc, options) ->
         @responses = new Cache
             timeout: options?.timeout || 1000
+        @responses.on 'expired', (ev) ->
+            ev.value.reject new Error 'timeout'
 
     returnChannel: =>
         if !@_returnChannel

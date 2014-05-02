@@ -94,6 +94,13 @@ describe 'Rpc.resolveResponse()', ->
     it 'should handle non-existant corrIds gracefully', ->
         rpc.resolveResponse '9999', {}
 
+describe 'Rpc response expiration', ->
+    rpc = new Rpc new Amqpc, { timeout: 10 }
+
+    it 'should reject the promise with a timeout error', ->
+        def = rpc.registerResponse '1234'
+        def.promise.should.eventually.be.rejectedWith 'timeout'
+
 describe 'Rpc.rpc() called with headers', ->
     exchange = new Exchange
     _publish = mock(exchange).expects('publish').withArgs 'world', 'msg',

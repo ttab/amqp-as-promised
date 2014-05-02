@@ -9,7 +9,7 @@
     "main": "lib/index",
     "scripts": {
         "test": "mocha",
-        "prepublish": "rm -rf lib & ./node_modules/.bin/coffee -o lib/ -c src/ & mocha"
+        "prepublish": "rm -rf lib & ./node_modules/.bin/coffee -o lib/ -c src/ & mocha --reporter spec"
     },
     "keywords": [
         "amqp",
