@@ -1,5 +1,4 @@
 chai            = require 'chai'
-mochaAsPromised = require 'mocha-as-promised'
 Q               = require 'q'
 log             = require 'bog'
 RpcBackend      = require '../src/rpc-backend'
@@ -10,7 +9,6 @@ expect = chai.expect
 should = chai.should()
 chai.use(require 'chai-as-promised')
 chai.use(require 'sinon-chai')
-mochaAsPromised()
 
 describe 'RpcBackend.serve()', ->
     callback = ->

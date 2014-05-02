@@ -1,16 +1,15 @@
 chai            = require 'chai'
 chaiAsPromised  = require 'chai-as-promised'
-mochaAsPromised = require 'mocha-as-promised'
-sinon           = require 'sinon'
 sinonChai       = require 'sinon-chai'
 Q               = require 'q'
 uuid            = require 'uuid'
+
+{ spy, stup, mock, match } = require 'sinon'
 
 expect = chai.expect
 should = chai.should()
 chai.use chaiAsPromised
 chai.use sinonChai
-mochaAsPromised()
 
 Rpc = require '../src/rpc'
 
@@ -21,12 +20,12 @@ class Queue
     subscribe: ->
 
 class Amqpc
-    exchange: -> Q.fcall -> new Exchange
-    queue: -> Q.fcall -> new Queue
+    exchange: -> Q new Exchange
+    queue: -> Q new Queue
 
 describe 'the Rpc constructor', ->
     amqpc = new Amqpc
-    _queue = sinon.mock(amqpc).expects('queue').never()
+    _queue = mock(amqpc).expects('queue').never()
     rpc = new Rpc amqpc
 
     it 'should not start the return channel', ->
@@ -35,9 +34,9 @@ describe 'the Rpc constructor', ->
 
 describe 'Rpc.returnChannel()', ->
     channel = new Queue
-    _subscribe = sinon.mock(channel).expects('subscribe').once()
+    _subscribe = mock(channel).expects('subscribe').once()
     amqpc = new Amqpc
-    _queue = sinon.mock(amqpc).expects('queue').once().returns Q.fcall -> channel
+    _queue = mock(amqpc).expects('queue').once().returns Q channel
 
     rpc = new Rpc amqpc
 
@@ -58,7 +57,7 @@ describe 'the subscription callback', ->
         channel.subscribe = (callback) ->
             setTimeout (-> callback({}, {}, { correlationId: '1234' })), 100
 
-        amqpc = { queue: -> Q.fcall -> channel }
+        amqpc = { queue: -> Q channel }
 
         rpc = new Rpc amqpc
         rpc.returnChannel()
@@ -97,15 +96,15 @@ describe 'Rpc.resolveResponse()', ->
 
 describe 'Rpc.rpc() called with headers', ->
     exchange = new Exchange
-    _publish = sinon.mock(exchange).expects('publish').withArgs 'world', 'msg',
-        sinon.match({ replyTo: 'q123', headers: { 'customHeader', 'header1' } }).and(sinon.match.has('correlationId'))
+    _publish = mock(exchange).expects('publish').withArgs 'world', 'msg',
+        match({ replyTo: 'q123', headers: { 'customHeader', 'header1' } }).and(match.has('correlationId'))
 
     queue = new Queue
     queue.name = 'q123'
 
     amqpc = new Amqpc
-    sinon.mock(amqpc).expects('queue').returns Q.fcall -> queue
-    _exchange = sinon.mock(amqpc).expects('exchange').withArgs('hello').returns(Q.fcall -> exchange)
+    mock(amqpc).expects('queue').returns Q queue
+    _exchange = mock(amqpc).expects('exchange').withArgs('hello').returns(Q exchange)
 
     rpc = new Rpc amqpc
     promise = rpc.rpc('hello', 'world', 'msg', { 'customHeader', 'header1' })
@@ -124,14 +123,14 @@ describe 'Rpc.rpc() called with headers', ->
 
 describe 'Rpc.rpc() called without headers', ->
     exchange = new Exchange
-    _publish = sinon.mock(exchange).expects('publish').withArgs 'world', 'msg',
-        sinon.match({ replyTo: 'q123' }).and(sinon.match (val) -> val.correlationId? and Object.keys(val).indexOf('headers') == -1)
+    _publish = mock(exchange).expects('publish').withArgs 'world', 'msg',
+        match({ replyTo: 'q123' }).and(match (val) -> val.correlationId? and Object.keys(val).indexOf('headers') == -1)
 
     queue = { name: 'q123' }
 
     amqpc =
-        queue: -> Q.fcall -> queue
-        exchange: -> Q.fcall -> exchange
+        queue: -> Q queue
+        exchange: -> Q exchange
 
     rpc = new Rpc amqpc
     promise = rpc.rpc('hello', 'world', 'msg')
@@ -145,8 +144,8 @@ describe 'Rpc.rpc() called without headers', ->
 describe 'Rpc.rpc() called without msg object', ->
 
     amqpc =
-        queue: -> Q.fcall -> queue
-        exchange: -> Q.fcall -> exchange
+        queue: -> Q queue
+        exchange: -> Q exchange
 
     rpc = new Rpc amqpc
 
