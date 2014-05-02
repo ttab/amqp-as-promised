@@ -68,10 +68,13 @@ To create an anomymous queue.
 
 ## Using `amqpc` to do RPC-style calls
 
-To send a message to a service that honors the replyTo/correlationId contract:
+to send a message to a service that honors the replyTo/correlationId contract:
 
-    amqpc.rpc('myexchange', 'routing.key', msg, [headers]).then ([msg, headers]) ->
-        console.log 'received message', msg
+    amqpc.rpc('myexchange', 'routing.key', msg, [headers]).then (response) ->
+        console.log 'received message', response
+
+*Note!* In earlier versions the response was an array that included
+ the response headers. As of version 0.1, this is no longer the case.
 
 ## Using `amqpc` to serve RPC-style calls
 

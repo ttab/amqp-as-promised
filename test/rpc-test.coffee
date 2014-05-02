@@ -86,7 +86,7 @@ describe 'Rpc.resolveResponse()', ->
     rpc.resolveResponse '1234', 'hello, world', { header1: 'value1' }
 
     it 'should resolve the promise', ->
-        def.promise.should.eventually.eql [ 'hello, world', { header1: 'value1' } ]
+        def.promise.should.eventually.eql 'hello, world'
 
     it 'should remove the deferred from the response list', ->
         rpc.responses.should.not.have.property '1234'
@@ -127,7 +127,7 @@ describe 'Rpc.rpc() called with headers', ->
     it 'should properly resolve the promise with resolveResponse()', ->
         rpc.responses.keys.should.have.length 1        
         rpc.resolveResponse rpc.responses.keys[0], 'solved!', {}
-        promise.should.eventually.eql([ 'solved!', {} ]).then ->
+        promise.should.eventually.eql('solved!').then ->
             rpc.responses.keys.should.have.length 0
 
 describe 'Rpc.rpc() called without headers', ->
@@ -148,7 +148,7 @@ describe 'Rpc.rpc() called without headers', ->
         _publish.verify()
     it 'should properly resolve the promise with resolveResponse()', ->
         rpc.resolveResponse rpc.responses.keys[0], 'solved!', {}
-        promise.should.eventually.eql [ 'solved!', {} ]
+        promise.should.eventually.eql 'solved!'
 
 describe 'Rpc.rpc() called without msg object', ->
     amqpc =

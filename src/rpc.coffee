@@ -25,7 +25,7 @@ module.exports = class Rpc
 
     resolveResponse: (corrId, msg, headers) =>
         if @responses.get corrId
-            @responses.get(corrId).resolve [ msg, headers ]
+            @responses.get(corrId).resolve msg
             @responses.remove corrId
 
     rpc: (exname, routingKey, msg, headers) =>
