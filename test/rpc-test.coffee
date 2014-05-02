@@ -77,7 +77,7 @@ describe 'Rpc.registerResponse()', ->
         expect(def).to.have.property 'resolve'
 
     it 'should add a mapping between a corrId and a deferred', ->
-        rpc.responses.should.have.property '1234', def
+        rpc.responses.get('1234').should.equal def
 
 describe 'Rpc.resolveResponse()', ->
     rpc = new Rpc new Amqpc
@@ -91,7 +91,7 @@ describe 'Rpc.resolveResponse()', ->
     it 'should remove the deferred from the response list', ->
         rpc.responses.should.not.have.property '1234'
 
-    it 'should handle non-existand corrIds gracefully', ->
+    it 'should handle non-existant corrIds gracefully', ->
         rpc.resolveResponse '9999', {}
 
 describe 'Rpc.rpc() called with headers', ->
@@ -114,12 +114,14 @@ describe 'Rpc.rpc() called with headers', ->
     it 'should call exchange.publish()', ->
         _publish.verify()
     it 'should add exactly one corrId/deferred mapping', ->
-        Object.keys(rpc.responses).should.have.length 1
+        rpc.responses.keys.should.have.length 1
     it 'should use something like a uuid as corrId', ->
-        Object.keys(rpc.responses)[0].should.match /^\w{8}-/
+        rpc.responses.keys[0].should.match /^\w{8}-/
     it 'should properly resolve the promise with resolveResponse()', ->
-        rpc.resolveResponse Object.keys(rpc.responses)[0], 'solved!', {}
-        promise.should.eventually.eql [ 'solved!', {} ]
+        rpc.responses.keys.should.have.length 1        
+        rpc.resolveResponse rpc.responses.keys[0], 'solved!', {}
+        promise.should.eventually.eql([ 'solved!', {} ]).then ->
+            rpc.responses.keys.should.have.length 0
 
 describe 'Rpc.rpc() called without headers', ->
     exchange = new Exchange
@@ -138,15 +140,13 @@ describe 'Rpc.rpc() called without headers', ->
     it 'should still result in a published message', ->
         _publish.verify()
     it 'should properly resolve the promise with resolveResponse()', ->
-        rpc.resolveResponse Object.keys(rpc.responses)[0], 'solved!', {}
+        rpc.resolveResponse rpc.responses.keys[0], 'solved!', {}
         promise.should.eventually.eql [ 'solved!', {} ]
 
 describe 'Rpc.rpc() called without msg object', ->
-
     amqpc =
         queue: -> Q queue
         exchange: -> Q exchange
-
     rpc = new Rpc amqpc
 
     it 'should throw an error', ->

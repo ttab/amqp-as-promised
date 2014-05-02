@@ -1,9 +1,11 @@
 Q     = require 'q'
 uuid  = require 'uuid'
+Cache = require 'mem-cache'
 
 module.exports = class Rpc
-    constructor: (@amqpc) ->
-        @responses = {}
+    constructor: (@amqpc, options) ->
+        @responses = new Cache
+            timeout: options?.timeout || 1000
 
     returnChannel: =>
         if !@_returnChannel
@@ -16,13 +18,13 @@ module.exports = class Rpc
 
     registerResponse: (corrId) =>
         def = Q.defer()
-        @responses[corrId] = def
+        @responses.set corrId, def
         return def
 
     resolveResponse: (corrId, msg, headers) =>
-        if @responses[corrId]?
-            @responses[corrId].resolve [ msg, headers ]
-            delete @responses[corrId]
+        if @responses.get corrId
+            @responses.get(corrId).resolve [ msg, headers ]
+            @responses.remove corrId
 
     rpc: (exname, routingKey, msg, headers) =>
         throw new Error 'Must provide msg' unless msg
