@@ -18,11 +18,9 @@ Promise wrapper around [node-amqp](https://github.com/postwait/node-amqp).
 
 ### `connection`
 
-* Connection settings accepted by [node-amqp]:https://github.com/postwait/node-amqp#connection-options-and-url
-  - `host`
-  - `vhost`
-  - `login`
-  - `password`
+* Connection settings accepted by
+[node-amqp](https://github.com/postwait/node-amqp#connection-options-and-url). You
+need to specify either `host`, `vhost`, `login`, `password` or `url`.
 
 ### `local`
 
@@ -32,15 +30,19 @@ If true, means there will be no AMQP connection.
 
 * `timeout`: timeout in ms for rpc calls
 
-## Example localhost config
+## Example config
 
     {
-        "amqp": {
+        "connection": {
             "host": "192.168.0.10",
             "vhost": "test",
             "login": "test",
             "password": "supersecret"
-        }
+        },
+		"local": false,
+		"rpc": {
+		    "timeout": 2000
+		}
     }
 
 ## Using `amqpc` to publish
