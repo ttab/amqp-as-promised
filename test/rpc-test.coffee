@@ -74,7 +74,7 @@ describe 'Rpc.registerResponse()', ->
         expect(def).to.have.property 'resolve'
 
     it 'should add a mapping between a corrId and a deferred', ->
-        rpc.responses.get('1234').should.equal def
+        rpc.responses.get('1234').should.eql {def:def,options:{}}
 
 describe 'Rpc.resolveResponse()', ->
     rpc = new Rpc new Amqpc
@@ -105,8 +105,8 @@ describe 'Rpc response expiration', ->
         rpc.responses.emit 'expired', { }
 
     it 'should ensure that the expiration event is a deferred before calling reject', ->
-        rpc.responses.emit 'expired', { value: { reject: 123 } }
-                        
+        rpc.responses.emit 'expired', { value: { def: reject: 123 } }
+
 describe 'Rpc.rpc() called with headers', ->
     exchange = new Exchange
     _publish = mock(exchange).expects('publish').withArgs 'world', 'msg',
@@ -131,7 +131,7 @@ describe 'Rpc.rpc() called with headers', ->
     it 'should use something like a uuid as corrId', ->
         rpc.responses.keys[0].should.match /^\w{8}-/
     it 'should properly resolve the promise with resolveResponse()', ->
-        rpc.responses.keys.should.have.length 1        
+        rpc.responses.keys.should.have.length 1
         rpc.resolveResponse rpc.responses.keys[0], 'solved!', {}
         promise.should.eventually.eql('solved!').then ->
             rpc.responses.keys.should.have.length 0
@@ -170,12 +170,29 @@ describe 'Rpc.rpc() called with a timeout option', ->
         queue: -> Q { name: 'q123' }
         exchange: -> Q new Exchange
     rpc = new Rpc amqpc
+    rpc.responses = set:spy()
     spy rpc, 'registerResponse'
 
-    it 'should passs the timeout on to registerResponse()', ->
-        rpc.rpc('hello', 'world', 'msg', {}, { timeout: 23 }).then ->
-            rpc.registerResponse.should.have.been.calledWith match.string, 23
-        .fail ->
-            # noop
-    
-    
+    it 'should pass the timeout on to registerResponse()', (done) ->
+        rpc.rpc('hello', 'world', 'msg', {}, { timeout: 23 })
+        setTimeout ->
+            rpc.registerResponse.should.have.been.calledWith match.string,
+                {info: "hello/world",timeout: 23}
+            done()
+        , 10
+
+describe 'Rpc.rpc() called with an info option', (done) ->
+    amqpc =
+        queue: -> Q { name: 'q123' }
+        exchange: -> Q new Exchange
+    rpc = new Rpc amqpc
+    rpc.responses = set:spy()
+    spy rpc, 'registerResponse'
+
+    it 'should pass the info to registerResponse()', (done) ->
+        rpc.rpc('hello', 'world', 'msg', {}, { info:'my trace output' })
+        setTimeout ->
+            rpc.registerResponse.should.have.been.calledWith match.string,
+                {info: "my trace output"}
+            done()
+        , 10

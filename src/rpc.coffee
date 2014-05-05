@@ -7,7 +7,8 @@ module.exports = class Rpc
         @responses = new Cache
             timeout: options?.timeout || 1000
         @responses.on 'expired', (ev) ->
-            ev.value.reject new Error 'timeout' if typeof ev?.value?.reject == 'function'
+            if typeof ev?.value?.def.reject == 'function'
+                ev.value.def.reject new Error "timeout: #{ev.options?.info}"
 
     returnChannel: =>
         if !@_returnChannel
@@ -18,14 +19,16 @@ module.exports = class Rpc
                         @resolveResponse deliveryInfo.correlationId, msg
         return @_returnChannel
 
-    registerResponse: (corrId, timeout) =>
+    registerResponse: (corrId, options) =>
         def = Q.defer()
-        @responses.set corrId, def, timeout
+        options = options || {}
+        value = {def:def, options:options}
+        @responses.set corrId, value, options.timeout
         return def
 
     resolveResponse: (corrId, msg, headers) =>
         if @responses.get corrId
-            @responses.get(corrId).resolve msg
+            @responses.get(corrId).def.resolve msg
             @responses.remove corrId
 
     rpc: (exname, routingKey, msg, headers, options) =>
@@ -35,7 +38,9 @@ module.exports = class Rpc
             @returnChannel()
         ]).spread (ex, q) =>
             id = uuid.v4()
-            def = @registerResponse id, options?.timeout
+            options         = options || {}
+            options.info    = options.info || "#{exname}/#{routingKey}"
+            def = @registerResponse id, options
             opts = { replyTo: q.name, correlationId: id }
             opts.headers = headers if headers?
             ex.publish routingKey, msg, opts
