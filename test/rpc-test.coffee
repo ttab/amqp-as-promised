@@ -98,6 +98,15 @@ describe 'Rpc response expiration', ->
         def = rpc.registerResponse '1234'
         def.promise.should.eventually.be.rejectedWith 'timeout'
 
+    it 'should handle empty expiration events gracefully', ->
+        rpc.responses.emit 'expired', undefined
+
+    it 'should handle expiration events that lack a value gracefylly', ->
+        rpc.responses.emit 'expired', { }
+
+    it 'should ensure that the expiration event is a deferred before calling reject', ->
+        rpc.responses.emit 'expired', { value: { reject: 123 } }
+                        
 describe 'Rpc.rpc() called with headers', ->
     exchange = new Exchange
     _publish = mock(exchange).expects('publish').withArgs 'world', 'msg',
