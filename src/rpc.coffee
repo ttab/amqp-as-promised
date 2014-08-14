@@ -8,7 +8,7 @@ module.exports = class Rpc
             timeout: options?.timeout || 1000
         @responses.on 'expired', (ev) ->
             if typeof ev?.value?.def.reject == 'function'
-                ev.value.def.reject new Error "timeout: #{ev.options?.info}"
+                ev.value.def.reject new Error "timeout: #{ev.value.options?.info}"
 
     returnChannel: =>
         if !@_returnChannel

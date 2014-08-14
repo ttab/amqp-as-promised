@@ -95,8 +95,8 @@ describe 'Rpc response expiration', ->
     rpc = new Rpc new Amqpc, { timeout: 10 }
 
     it 'should reject the promise with a timeout error', ->
-        def = rpc.registerResponse '1234'
-        def.promise.should.eventually.be.rejectedWith 'timeout'
+        def = rpc.registerResponse '1234', { info: 'panda.cub' }
+        def.promise.should.eventually.be.rejectedWith 'timeout: panda.cub'
 
     it 'should handle empty expiration events gracefully', ->
         rpc.responses.emit 'expired', undefined
