@@ -23,7 +23,7 @@
   "license": "MIT",
   "dependencies": {
     "q": "~1.0.0",
-    "amqp": "~0.1.8",
+    "amqp": "~0.2.0",
     "uuid": "~1.4.1",
     "bog": "1.0.0",
     "mem-cache": "0.0.4"

@@ -133,7 +133,7 @@ module.exports = (conf) ->
             opts = qname
             qname = ''
         qname = '' if !qname
-        opts = opts ? { durable: true, exclusive: qname == '' }
+        opts = opts ? { durable: true, autoDelete: false, exclusive: qname == '' }
         def = Q.defer()
         conn.then (mq) ->
             if qname != ''
