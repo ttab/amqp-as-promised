@@ -7,6 +7,10 @@ class QueueWrapper
 
     constructor: (@conn, @queue) ->
         @name = @queue.name
+        # For anonymous queues, the name of the underlying queue will
+        # change if we get reconnected to the server.
+        @queue.on 'open', (name) =>
+            @name = name
 
     bind: (ex, topic) =>
         throw new Error('Exchange is not an object') unless ex or typeof ex != 'object'
