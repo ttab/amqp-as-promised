@@ -110,7 +110,7 @@ describe 'Rpc response expiration', ->
 describe 'Rpc.rpc() called with headers', ->
     exchange = new Exchange
     _publish = mock(exchange).expects('publish').withArgs 'world', 'msg',
-        match({ replyTo: 'q123', headers: { 'customHeader', 'header1' } }).and(match.has('correlationId'))
+        match({ replyTo: 'q123', headers: { 'customHeader', 'header1' } }).and(match.has('correlationId')).and(match(deliveryMode:1))
 
     queue = new Queue
     queue.name = 'q123'

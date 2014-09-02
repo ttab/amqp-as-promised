@@ -41,7 +41,7 @@ module.exports = class Rpc
             options         = options || {}
             options.info    = options.info || "#{exname}/#{routingKey}"
             def = @registerResponse id, options
-            opts = { replyTo: q.name, correlationId: id }
+            opts = { deliveryMode: 1, replyTo: q.name, correlationId: id }
             opts.headers = headers if headers?
             ex.publish routingKey, msg, opts
             def.promise
