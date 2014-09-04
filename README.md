@@ -41,6 +41,11 @@ If true, means there will be no AMQP connection. Default: false
 
 * `timeout`: timeout in ms for rpc calls. Default: 1000ms
 
+### `logLevel`
+
+* `logLevel`: sets the log level. Defaults to `INFO`. Possible levels
+  are `DEBUG`, `INFO`, `WARN`, `ERROR`
+
 ## Example config
 
     {
@@ -50,11 +55,22 @@ If true, means there will be no AMQP connection. Default: false
             "login": "test",
             "password": "supersecret"
         },
-		"local": false,
-		"rpc": {
-		    "timeout": 2000
-		}
+        "logLevel": "warn",
+        "local": false,
+        "rpc": {
+            "timeout": 2000
+        }
     }
+
+Or with url:
+
+    {
+        "connection": {
+            "url": "amqp://myuser:supersecret@192.168.0.10/test"
+        },
+        "logLevel": "warn"
+    }
+
 
 ## Using `amqpc` to publish
 
