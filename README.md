@@ -199,7 +199,7 @@ Read only property that tells whether `conf.local` was true.
 
 ## The `exchange` object
 
-### `exchange.publish(routingKey, msg, options)
+### `exchange.publish(routingKey, msg, options)`
 
 Publishes a message, returning a promise.
 
