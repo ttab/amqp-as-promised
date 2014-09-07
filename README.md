@@ -7,7 +7,7 @@ Promise wrapper around [node-amqp](https://github.com/postwait/node-amqp).
 
  * [Configuration](#configuration)
  * [Examples](#examples)
- * [API](#API)
+ * [API](#api)
 
 ## Installing
 
