@@ -1,7 +1,8 @@
-log          = require 'bog'
-Q            = require 'q'
-amqp         = require 'amqp'
-QueueWrapper = require './queue-wrapper'
+log             = require 'bog'
+Q               = require 'q'
+amqp            = require 'amqp'
+ExchangeWrapper = require './exchange-wrapper'
+QueueWrapper    = require './queue-wrapper'
 
 module.exports = (conf) ->
         
@@ -43,9 +44,10 @@ module.exports = (conf) ->
             return (prom.then (ex) -> def.resolve ex) if prom
             mq._ttExchanges[name] = def.promise
             opts = opts ? {passive:true}
+            opts.confirm = true
             mq.exchange name, opts, (ex) ->
                 log.info 'exchange ready:', ex.name
-                def.resolve ex
+                def.resolve new ExchangeWrapper ex
         .done()
         def.promise
 
