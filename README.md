@@ -8,6 +8,9 @@ Promise wrapper around [node-amqp](https://github.com/postwait/node-amqp).
  * [Configuration](#configuration)
  * [Examples](#examples)
  * [API](#api)
+   * [The amqpc object](#the-amqpc-object)
+   * [The exchange object](#the-exchange-object)
+   * [The queue object](#the-queue-object)
 
 ## Installing
 
