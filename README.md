@@ -178,11 +178,10 @@ A promise for a queue. If `qname` is omitted, `""` is used. If opts is
 omitted, then `exclusive:true` is assumed if the name is empty, or
 `passive:true` if not.
 
-Thus, `amqpc.queue()` will create a new exclusvie, anonymous, queue
-that is automatically deleted on disconnect.
-
-`amqpc.queue('my-queue')` will try to passively declare the queue
-`my-queue`, signaling an error on failure.
+Thus, `amqpc.queue()` will create a new exclusive, anonymous, queue
+that is automatically deleted on disconnect, while
+`amqpc.queue('my-queue')` will try to passively declare the existing
+queue `my-queue`.
 
 See [`queue.*`](#the-queue-object) below.
 
