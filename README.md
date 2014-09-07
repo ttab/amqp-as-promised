@@ -189,24 +189,24 @@ queue `my-queue`.
 
 See [`queue.*`](#the-queue-object) below.
 
-### `amqpc.bind(exchange, qname, topic[, callback])`
+### `amqpc.bind(exchange, queue, topic[, callback])`
 
 Shorthand for
 
-1. Looking up exchange for `exname`. Note that `passive:true` so
-   exchange must be declared already.
-2. Looking up queue for `qname`. See `amqpc.queue` for queue default
-   opts.
-3. Binding queue to `topic`.
-4. Subscribing `callback` to queue (optional).
+1. If `exchange` is a string, then look up the existing exchange with
+   that name. 
+2. If `queue` is a string, then look up the existing queue with that name.
+3. Bind queue to `exchange/topic`.
+4. Subscribe `callback` to queue (optional).
 
 #### Parameters
 
  * `exchange` - an exchange object or a string with the name of an
    exchange
  * `queue` - a queue object or a string with the name of a queue
- * `topic`
- * `callback`
+ * `topic` - a string with the topic name.
+ * `callback` - a function that takes the arguments `(msg, headers,
+   deliveryinfo)`.
 
 ### `amqpc.shutdown()`
 
