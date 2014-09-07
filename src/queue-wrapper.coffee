@@ -14,8 +14,9 @@ module.exports = class QueueWrapper
     bind: (exchange, topic) =>
         Q().then =>
             throw new Error('Topic is not a string') if not topic or typeof topic != 'string'
-            @amqpc._exchange(exchange)
-        .then (ex) =>
+            @amqpc.exchange(exchange)
+        .then (exwrapper) =>
+            ex = exwrapper.exchange
             def = Q.defer()
             @unbind().then =>
                 log.info 'binding:', ex.name, @name, topic

@@ -1,6 +1,7 @@
-{EventEmitter} = require 'events'
-Q              = require 'q'
-QueueWrapper   = require '../src/queue-wrapper'
+{EventEmitter}  = require 'events'
+Q               = require 'q'
+ExchangeWrapper = require '../src/exchange-wrapper'
+QueueWrapper    = require '../src/queue-wrapper'
 
 amqpc = amqpClient = nodeAmqp = undefined
 
@@ -15,11 +16,10 @@ describe 'QueueWrapper', ->
         exchange = queue = wrapper = undefined
         beforeEach ->
             queue = new EventEmitter
-            queue.bind = ->
-                queue.emit 'queueBindOk'
+            queue.bind = -> queue.emit 'queueBindOk'
             spy queue, 'bind'
-            exchange = name: 'my-exchange'
-            amqpc = _exchange: (name) -> Q exchange
+            exchange = new ExchangeWrapper name:'my-exchange'
+            amqpc = exchange: -> Q exchange
             wrapper = new QueueWrapper amqpc, queue
             
         it 'should accept the name of an exchange as arg', ->

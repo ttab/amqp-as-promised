@@ -43,18 +43,10 @@ describe 'AmqpClient', ->
         it 'should pass a reference to itself to QueueWrapper', ->
             amqpc.queue().then (q) ->
                 q.amqpc.should.equal amqpc
-
-    describe '._exchange()', ->
-        beforeEach ->
-            spy amqp, 'exchange'
-            
-        it 'should lookup the exchange if passed a string', ->
-            amqpc._exchange('panda').then ->
-                amqp.exchange.should.have.been.calledWith 'panda'
-        it 'should return the same object if passed an ExchangeWrapper', ->
-            amqpc.exchange('panda').then (ex1) ->
-                amqpc._exchange(ex1).then (ex2) ->
-                    expect(ex1).to.equal ex2
+        it 'should return the same object if passed a QueueWrapper as only argument', ->
+            amqpc.queue('panda').then (q1) ->
+                amqpc.queue(q1).then (q2) ->
+                    expect(q1).to.equal q2
 
     describe '.exchange()', ->
         beforeEach ->
@@ -70,4 +62,9 @@ describe 'AmqpClient', ->
 
         it 'should return an ExchangeWrapper', ->
             amqpc.exchange('panda').should.eventually.be.an.instanceof ExchangeWrapper
+
+        it 'should return the same object if passed an ExchangeWrapper as only argument', ->
+            amqpc.exchange('panda').then (ex1) ->
+                amqpc.exchange(ex1).then (ex2) ->
+                    expect(ex1).to.equal ex2
         

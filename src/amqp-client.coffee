@@ -34,15 +34,8 @@ module.exports = (conf) ->
                         (if err.message then err.message else err)
         def.promise
 
-    # Utility fn for allowing functions to accept either an exchange
-    # object or the name of an exchange.
-    _exchange = (ex) ->
-        if typeof(ex) == 'string'
-            @exchange ex
-        else
-            Q ex
-
     exchange = (name, opts) ->
+        return Q(name) if name instanceof ExchangeWrapper 
         throw new Error 'Unable connect exchange when local' if local
         throw new Error 'Unable connect exchange when shutdown' if isShutdown
         def = Q.defer()
@@ -59,7 +52,8 @@ module.exports = (conf) ->
         .done()
         def.promise
 
-    queue = (qname, opts) ->
+    queue = (qname, opts) =>
+        return Q(qname) if qname instanceof QueueWrapper 
         throw new Error 'Unable to connect queue when local' if local
         throw new Error 'Unable to connect queue shutdown' if isShutdown
         if qname != null and typeof qname == 'object'
@@ -76,11 +70,11 @@ module.exports = (conf) ->
             mq.queue qname, opts, (queue) =>
                 log.info 'queue created:', queue.name
                 mq._ttQueues[queue.name] = def.promise if qname == ''
-                def.resolve new QueueWrapper @, queue
+                def.resolve new QueueWrapper _self, queue
         .done()
         def.promise
 
-    bind = (exchange, qname, topic, callback) ->
+    bind = (ex, q, topic, callback) ->
         throw new Error 'Unable to bind when local' if local
         throw new Error 'Unable to bind when shutdown' if isShutdown
         if typeof topic == 'function'
@@ -89,7 +83,7 @@ module.exports = (conf) ->
             qname = ''
         qname = '' if not qname
         def = Q.defer()
-        (Q.all [(_exchange exchange), (queue qname)]).spread (ex, q) ->
+        (Q.all [(exchange ex), (queue q)]).spread (ex, q) ->
             Q.fcall ->
                 q.bind ex, topic
             .then (q) ->
@@ -136,12 +130,10 @@ module.exports = (conf) ->
         .done()
         def.promise
 
-    {
-        _exchange: _exchange
+    return _self = {
         exchange: exchange
         queue: queue
         bind: bind
         shutdown: shutdown
         local: local
     }
-
