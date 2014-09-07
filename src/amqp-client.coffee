@@ -30,7 +30,7 @@ module.exports = (conf) ->
                 log.warn 'amqp connection failed:', err
             else if def.promise.isFulfilled()
                 unless isShutdown
-                    log.warn 'amqp connection failed:',
+                    log.warn 'amqp error:',
                         (if err.message then err.message else err)
         def.promise
 
