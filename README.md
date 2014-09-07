@@ -15,6 +15,7 @@ functions for AMQP-based RPC.
    * [The amqpc object](#the-amqpc-object)
    * [The exchange object](#the-exchange-object)
    * [The queue object](#the-queue-object)
+   * [RPC functions](#rpc-functions)
 
 ## Installing
 
@@ -252,7 +253,7 @@ rejects the previous message and will requeue it if `requeue` is true.
 
 Read only property with the queue name.
 
-## RPC
+## RPC functions
 
 ### `amqpc.rpc(exchange, routingKey, msg, [headers], [options])`
 
