@@ -174,8 +174,16 @@ A promise for an exchange. If `opts` is omitted declares an exchange in `passive
 ### `amqpc.queue(qname, opts)`
 
 A promise for a queue. If `qname` is omitted, `""` is used. If opts is
-omitted a default `durable:true` and `autoDelete:(qname=='')`. See
-`queue.*` below.
+omitted, then `exclusive:true` is assumed if the name is empty, or
+`passive:true` if not.
+
+Thus, `amqpc.queue()` will create a new exclusvie, anonymous, queue
+that is automatically deleted on disconnect.
+
+`amqpc.queue('my-queue')` will try to passively declare the queue
+`my-queue`, signaling an error on failure.
+
+See [`queue.*`](#the-queue-object) below.
 
 ### `amqpc.bind(exname, qname, topic[, callback])`
 
