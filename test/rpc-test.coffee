@@ -1,14 +1,6 @@
-chai   = require 'chai'
-Q      = require 'q'
-uuid   = require 'uuid'
-expect = chai.expect
-should = chai.should()
-
-chai.use(require 'sinon-chai')
-chai.use(require 'chai-as-promised')
-{ spy, stub, mock, match } = require 'sinon'
-
-Rpc = require '../src/rpc'
+Q    = require 'q'
+uuid = require 'uuid'
+Rpc  = require '../src/rpc'
 
 class Exchange
     publish: ->

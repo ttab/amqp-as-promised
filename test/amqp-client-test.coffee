@@ -1,15 +1,5 @@
 {EventEmitter}             = require 'events'
-proxyquire                 = require 'proxyquire'
-chai                       = require 'chai'
-expect                     = chai.expect
-should                     = chai.should()
 Q                          = require 'q'
-log                        = require 'bog'
-{ spy, stub, mock, match } = require 'sinon'
-
-chai.use(require 'chai-as-promised')
-
-log.level -1
 
 amqpClient = nodeAmqp = undefined
 

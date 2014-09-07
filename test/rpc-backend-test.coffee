@@ -1,14 +1,5 @@
-chai            = require 'chai'
 Q               = require 'q'
-log             = require 'bog'
 RpcBackend      = require '../src/rpc-backend'
-
-{ assert, spy, match, mock, stub } = require 'sinon'
-
-expect = chai.expect
-should = chai.should()
-chai.use(require 'chai-as-promised')
-chai.use(require 'sinon-chai')
 
 describe 'RpcBackend.serve()', ->
     callback = ->
@@ -38,7 +29,6 @@ describe 'RpcBackend.serve()', ->
     it 'should subscribe the callback to the request queue', ->
         qu.subscribe.should.have.been.calledWith match.func
 
-
 describe 'RpcBackend._mkcallback()', ->
     exchange = { publish: stub() }
     handler = stub().returns Q.fcall -> 'returnValue'
@@ -59,8 +49,6 @@ describe 'RpcBackend._mkcallback()', ->
 describe 'RpcBackend._mkcallback()', ->
     exchange = { publish: stub() }
     handler = stub().returns Q.fcall -> throw new Error('error msg')
-    _error = log.error
-    log.error = ->
 
     rpc = new RpcBackend {}
     callback = rpc._mkcallback exchange, handler
@@ -69,7 +57,6 @@ describe 'RpcBackend._mkcallback()', ->
 
     it 'should pass errors thrown by the handler on to the client', ->
         exchange.publish.should.have.been.calledWith 'reply', { error: 'error msg'}, match.object
-        log.error = _error
 
 describe 'RpcBackend._mkcallback()', ->
     exchange = { publish: stub() }

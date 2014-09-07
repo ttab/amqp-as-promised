@@ -1,10 +1,3 @@
-proxyquire = require 'proxyquire'
-chai       = require 'chai'
-expect     = chai.expect
-should     = chai.should()
-
-chai.use(require 'sinon-chai')
-{ spy, stub, mock, match } = require 'sinon'
 
 describe 'Index', ->
     amqpc = Rpc = index = bog = undefined
