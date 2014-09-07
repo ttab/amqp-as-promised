@@ -68,15 +68,15 @@ module.exports = (conf) ->
         qname = '' if !qname
         opts = opts ? if qname == '' then { exclusive: true } else { passive: true }
         def = Q.defer()
-        conn.then (mq) ->
+        conn.then (mq) =>
             if qname != ''
                 prom = mq._ttQueues[qname]
                 return (prom.then (q) -> def.resolve q) if prom
                 mq._ttQueues[qname] = def.promise
-            mq.queue qname, opts, (queue) ->
+            mq.queue qname, opts, (queue) =>
                 log.info 'queue created:', queue.name
                 mq._ttQueues[queue.name] = def.promise if qname == ''
-                def.resolve new QueueWrapper(conn, queue)
+                def.resolve new QueueWrapper @, queue
         .done()
         def.promise
 

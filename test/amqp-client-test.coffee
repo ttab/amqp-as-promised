@@ -38,9 +38,11 @@ describe 'AmqpClient', ->
         it 'should pass given name and opts on when creating the queue', ->
             amqpc.queue('panda', { my: 'option' }).then ->
                 amqp.queue.should.have.been.calledWith 'panda', { my: 'option' }
-
         it 'should returns a promise for a QueueWrapper', ->
             amqpc.queue().should.eventually.be.an.instanceof QueueWrapper
+        it 'should pass a reference to itself to QueueWrapper', ->
+            amqpc.queue().then (q) ->
+                q.amqpc.should.equal amqpc
 
     describe '._exchange()', ->
         beforeEach ->
