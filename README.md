@@ -169,7 +169,8 @@ API
 
 ### `amqpc.exchange(name, opts)`
 
-A promise for an exchange. If `opts` is omitted declares an exchange in `passive` mode.
+A promise for an exchange. If `opts` is omitted, then `passive:true`
+is assumed.
 
 ### `amqpc.queue(qname, opts)`
 
