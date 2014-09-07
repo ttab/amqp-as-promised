@@ -3,7 +3,9 @@ AMQP as Promised
 
 ![Build Status](https://ci.tt.se/jenkins/buildStatus/icon?job=amqp-as-promised)
 
-Promise wrapper around [node-amqp](https://github.com/postwait/node-amqp).
+A high-level [promise-based](https://github.com/kriskowal/q) API built on
+[node-amqp](https://github.com/postwait/node-amqp), extended with
+functions for AMQP-based RPC.
 
  * [Configuration](#configuration)
  * [Examples](#examples)
@@ -240,3 +242,27 @@ rejects the previous message and will requeue it if `requeue` is true.
 
 Read only property with the queue name.
 
+## RPC
+
+### `amqpc.rpc(exchange, routingKey, msg, [headers], [options])`
+
+Perform an AMQP-based remote procedure call, and returns a promise for
+the return value:
+
+ 1. Creates an exlusive, anonymous, return queue if doesn't already
+    exist.
+ 2. Publishes an RPC-style message on the given `exchange`, with the
+    specified `routingkey`, `headers` and `options`. The `replyTo` and
+    `correlationId` headers are set automatically.
+ 3. Waits for a reply on the return queue, and resolves the promise
+    with the contents of the reply. If no reply is received before the
+    timeout, the promise is instead rejected.
+
+#### Parameters
+
+ * `exchange` - the name of an exchange, or an exchange object
+ * `routingkey`
+ * `headers` - AMQP headers to be sent with the message. See [exchange.publish()](#exchangepublishroutingkey-msg-options).
+ * `options` - valid options are:
+   + `timeout` - timeout in milliseconds. If none is specified, the
+     default value specified when creating the client is used.

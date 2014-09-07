@@ -1,6 +1,6 @@
 {
   "name": "amqp-as-promised",
-  "description": "Promise wrappers for node-amqp",
+  "description": "A promise-based AMQP API build on node-amqp",
   "version": "0.1.7",
   "repository": {
     "type": "git",
