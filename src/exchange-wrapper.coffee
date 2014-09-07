@@ -12,11 +12,5 @@ module.exports = class ExchangeWrapper
             else
                 def.resolve()
         def.promise
-
-    bind: () ->
-
-    unbind: () ->
-
-    bind_headers: () ->
         
     
