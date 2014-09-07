@@ -34,6 +34,14 @@ module.exports = (conf) ->
                         (if err.message then err.message else err)
         def.promise
 
+    # Utility fn for allowing functions to accept either an exchange
+    # object or the name of an exchange.
+    _exchange = (ex) ->
+        if typeof(ex) == 'string'
+            @exchange ex
+        else
+            Q ex
+
     exchange = (name, opts) ->
         throw new Error 'Unable connect exchange when local' if local
         throw new Error 'Unable connect exchange when shutdown' if isShutdown
@@ -72,7 +80,7 @@ module.exports = (conf) ->
         .done()
         def.promise
 
-    bind = (exname, qname, topic, callback) ->
+    bind = (exchange, qname, topic, callback) ->
         throw new Error 'Unable to bind when local' if local
         throw new Error 'Unable to bind when shutdown' if isShutdown
         if typeof topic == 'function'
@@ -81,7 +89,7 @@ module.exports = (conf) ->
             qname = ''
         qname = '' if not qname
         def = Q.defer()
-        (Q.all [(exchange exname), (queue qname)]).spread (ex, q) ->
+        (Q.all [(_exchange exchange), (queue qname)]).spread (ex, q) ->
             Q.fcall ->
                 q.bind ex, topic
             .then (q) ->
@@ -129,11 +137,11 @@ module.exports = (conf) ->
         def.promise
 
     {
+        _exchange: _exchange
         exchange: exchange
         queue: queue
         bind: bind
         shutdown: shutdown
         local: local
-        _QueueWrapper: QueueWrapper
     }
 

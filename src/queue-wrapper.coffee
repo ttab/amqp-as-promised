@@ -4,34 +4,36 @@ Q            = require 'q'
 # Queue wrapper that only exposes that which we want to exposes in a promise manner
 module.exports = class QueueWrapper
 
-    constructor: (@conn, @queue) ->
+    constructor: (@amqpc, @queue) ->
         @name = @queue.name
         # For anonymous queues, the name of the underlying queue will
         # change if we get reconnected to the server.
         @queue.on 'open', (name) =>
             @name = name
 
-    bind: (ex, topic) =>
-        throw new Error('Exchange is not an object') unless ex or typeof ex != 'object'
-        throw new Error('Topic is not a string') unless topic or typeof topic != 'string'
-        def = Q.defer()
-        @unbind().then =>
-            log.info 'binding:', ex.name, @name, topic
-            @queue.bind ex, topic
-            @queue.once 'queueBindOk', =>
-                @_ex = ex
-                @_topic = topic
-                log.info 'queue bound:', @name, @_topic
-                def.resolve this
-        .done()
-        def.promise
+    bind: (exchange, topic) =>
+        Q().then =>
+            throw new Error('Topic is not a string') if not topic or typeof topic != 'string'
+            @amqpc._exchange(exchange)
+        .then (ex) =>
+            def = Q.defer()
+            @unbind().then =>
+                log.info 'binding:', ex.name, @name, topic
+                @queue.once 'queueBindOk', =>
+                    @_ex = ex
+                    @_topic = topic
+                    log.info 'queue bound:', @name, @_topic
+                    def.resolve this
+                @queue.bind ex, topic
+            .done()
+            def.promise
 
     unbind: =>
         def = Q.defer()
         unless @_ex
             def.resolve this
             return def.promise
-        @conn.then (mq) =>
+        @amqpc.conn.then (mq) =>
             @queue.unbind @_ex, @_topic
             @queue.once 'queueUnbindOk', =>
                 log.info 'queue unbound:', @name, @_topic

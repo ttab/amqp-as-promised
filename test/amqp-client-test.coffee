@@ -41,7 +41,19 @@ describe 'AmqpClient', ->
 
         it 'should returns a promise for a QueueWrapper', ->
             amqpc.queue().should.eventually.be.an.instanceof QueueWrapper
-    
+
+    describe '._exchange()', ->
+        beforeEach ->
+            spy amqp, 'exchange'
+            
+        it 'should lookup the exchange if passed a string', ->
+            amqpc._exchange('panda').then ->
+                amqp.exchange.should.have.been.calledWith 'panda'
+        it 'should return the same object if passed an ExchangeWrapper', ->
+            amqpc.exchange('panda').then (ex1) ->
+                amqpc._exchange(ex1).then (ex2) ->
+                    expect(ex1).to.equal ex2
+
     describe '.exchange()', ->
         beforeEach ->
             spy amqp, 'exchange'

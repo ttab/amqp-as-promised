@@ -31,15 +31,15 @@ module.exports = class Rpc
             @responses.get(corrId).def.resolve msg
             @responses.remove corrId
 
-    rpc: (exname, routingKey, msg, headers, options) =>
+    rpc: (exchange, routingKey, msg, headers, options) =>
         throw new Error 'Must provide msg' unless msg
         Q.all([
-            @amqpc.exchange(exname),
+            @amqpc._exchange(exchange)
             @returnChannel()
         ]).spread (ex, q) =>
             id = uuid.v4()
             options         = options || {}
-            options.info    = options.info || "#{exname}/#{routingKey}"
+            options.info    = options.info || "#{ex.name}/#{routingKey}"
             def = @registerResponse id, options
             opts = { deliveryMode: 1, replyTo: q.name, correlationId: id }
             opts.headers = headers if headers?

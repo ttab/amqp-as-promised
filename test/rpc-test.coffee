@@ -3,13 +3,14 @@ uuid = require 'uuid'
 Rpc  = require '../src/rpc'
 
 class Exchange
+    constructor: (@name) ->
     publish: ->
 
 class Queue
     subscribe: ->
 
 class Amqpc
-    exchange: -> Q new Exchange
+    _exchange: -> Q new Exchange
     queue: -> Q new Queue
 
 describe 'the Rpc constructor', ->
@@ -109,7 +110,7 @@ describe 'Rpc.rpc() called with headers', ->
 
     amqpc = new Amqpc
     mock(amqpc).expects('queue').returns Q queue
-    _exchange = mock(amqpc).expects('exchange').withArgs('hello').returns(Q exchange)
+    _exchange = mock(amqpc).expects('_exchange').withArgs('hello').returns(Q exchange)
 
     rpc = new Rpc amqpc
     promise = rpc.rpc('hello', 'world', 'msg', { 'customHeader', 'header1' })
@@ -137,7 +138,7 @@ describe 'Rpc.rpc() called without headers', ->
 
     amqpc =
         queue: -> Q queue
-        exchange: -> Q exchange
+        _exchange: -> Q exchange
 
     rpc = new Rpc amqpc
     promise = rpc.rpc('hello', 'world', 'msg')
@@ -151,19 +152,22 @@ describe 'Rpc.rpc() called without headers', ->
 describe 'Rpc.rpc() called without msg object', ->
     amqpc =
         queue: -> Q queue
-        exchange: -> Q exchange
+        _exchange: -> Q exchange
     rpc = new Rpc amqpc
 
     it 'should throw an error', ->
         expect(-> rpc.rpc('foo','bar')).to.throw 'Must provide msg'
 
 describe 'Rpc.rpc() called with a timeout option', ->
-    amqpc =
-        queue: -> Q { name: 'q123' }
-        exchange: -> Q new Exchange
-    rpc = new Rpc amqpc
-    rpc.responses = set:spy()
-    spy rpc, 'registerResponse'
+    amqpc = rpc = undefined
+    
+    beforeEach ->
+        amqpc =
+            queue: -> Q { name: 'q123' }
+            _exchange: (name) -> Q new Exchange name
+        rpc = new Rpc amqpc
+        rpc.responses = set:spy()
+        spy rpc, 'registerResponse'
 
     it 'should pass the timeout on to registerResponse()', (done) ->
         rpc.rpc('hello', 'world', 'msg', {}, { timeout: 23 })
@@ -172,14 +176,6 @@ describe 'Rpc.rpc() called with a timeout option', ->
                 {info: "hello/world",timeout: 23}
             done()
         , 10
-
-describe 'Rpc.rpc() called with an info option', (done) ->
-    amqpc =
-        queue: -> Q { name: 'q123' }
-        exchange: -> Q new Exchange
-    rpc = new Rpc amqpc
-    rpc.responses = set:spy()
-    spy rpc, 'registerResponse'
 
     it 'should pass the info to registerResponse()', (done) ->
         rpc.rpc('hello', 'world', 'msg', {}, { info:'my trace output' })

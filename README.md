@@ -187,7 +187,7 @@ queue `my-queue`.
 
 See [`queue.*`](#the-queue-object) below.
 
-### `amqpc.bind(exname, qname, topic[, callback])`
+### `amqpc.bind(exchange, qname, topic[, callback])`
 
 Shorthand for
 
@@ -197,6 +197,14 @@ Shorthand for
    opts.
 3. Binding queue to `topic`.
 4. Subscribing `callback` to queue (optional).
+
+#### Parameters
+
+ * `exchange` - an exchange object or a string with the name of an
+   exchange
+ * `queue` - a queue object or a string with the name of a queue
+ * `topic`
+ * `callback`
 
 ### `amqpc.shutdown()`
 
@@ -215,9 +223,9 @@ Publishes a message, returning a promise.
 
 ## The `queue` object
 
-### `queue.bind(ex, topic)`
+### `queue.bind(exchange, topic)`
 
-Binds the queue to the given exchange (object, not name). Will unbind
+Binds the queue to the given exchange (object, or string). Will unbind
 if queue was already bound.
 
 ### `queue.unbind()`
