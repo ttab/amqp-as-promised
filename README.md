@@ -77,7 +77,8 @@ Or with url:
     amqpc.exchange('myexchange').then (ex) ->
         msg = {}
         msg.domain = domain
-        ex.publish 'mytopic.foo', msg
+        ex.publish('mytopic.foo', msg).then ->
+			console.log 'published message!'
 
 ## Using `amqpc` to bind
 
@@ -209,3 +210,9 @@ rejects the previous message and will requeue it if `requeue` is true.
 ### `queue.name`
 
 Read only property with the queue name.
+
+
+## Changelog
+
+ * exchange.publish() now returns a promise, instead of being just an
+   async call.
