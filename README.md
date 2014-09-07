@@ -211,8 +211,3 @@ rejects the previous message and will requeue it if `requeue` is true.
 
 Read only property with the queue name.
 
-
-## Changelog
-
- * exchange.publish() now returns a promise, instead of being just an
-   async call.
