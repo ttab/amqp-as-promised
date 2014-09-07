@@ -5,6 +5,10 @@ AMQP as Promised
 
 Promise wrapper around [node-amqp](https://github.com/postwait/node-amqp).
 
+ * [Configuration](#configuration)
+ * [Examples](#examples)
+ * [API](#API)
+
 ## Installing
 
 `npm install amqp-as-promised`
@@ -14,7 +18,7 @@ Promise wrapper around [node-amqp](https://github.com/postwait/node-amqp).
     conf = require './myconf.json' # see example conf below
     amqpc = (require 'amqp-as-promised') conf.amqp
 
-## Config parameters
+## Configuration
 
 As of version 0.1.0, the following config parameters are accepted,
 although we also try to keep backwards compatibility with the older
@@ -71,6 +75,9 @@ Or with url:
         "logLevel": "warn"
     }
 
+
+Examples
+==========
 
 ## Using `amqpc` to publish
 
@@ -152,6 +159,9 @@ error message.
     process.on 'SIGINT', graceful
     process.on 'SIGTERM', graceful
 
+API
+===
+
 ## The `amqpc` object
 
 ### `amqpc.exchange(name, opts)`
@@ -183,6 +193,14 @@ shut down the socket connection.
 ### `amqpc.local`
 
 Read only property that tells whether `conf.local` was true.
+
+## The `exchange` object
+
+### `exchange.publish(routingKey, msg, options)
+
+Publishes a message, returning a promise.
+
+## The `queue` object
 
 ### `queue.bind(ex, topic)`
 
