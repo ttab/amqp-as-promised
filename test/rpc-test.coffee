@@ -57,11 +57,12 @@ describe 'the subscription callback', ->
 
 describe 'Rpc.registerResponse()', ->
     rpc = new Rpc new Amqpc
+    def = undefined
+    beforeEach ->
+        def = rpc.registerResponse '1234'
 
     it 'should have a map of responses', ->
         rpc.should.have.property 'responses'
-
-    def = rpc.registerResponse '1234'
 
     it 'should return a deferred', ->
         expect(def).to.have.property 'resolve'
@@ -71,7 +72,6 @@ describe 'Rpc.registerResponse()', ->
 
 describe 'Rpc.resolveResponse()', ->
     rpc = new Rpc new Amqpc
-
     def = rpc.registerResponse '1234'
     rpc.resolveResponse '1234', 'hello, world', { header1: 'value1' }
 
