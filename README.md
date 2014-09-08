@@ -17,6 +17,7 @@ functions for AMQP-based RPC.
    * [The exchange object](#the-exchange-object)
    * [The queue object](#the-queue-object)
    * [RPC functions](#rpc-functions)
+ * [Changelog](CHANGELOG.md)
 
 ## Installing
 
