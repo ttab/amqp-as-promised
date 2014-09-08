@@ -1,7 +1,7 @@
 Changelog
 =========
 
-## Unreleased
+## 0.2.0 - 2014-09-08
 
 ### Changed
  * `exchange.publish()` now returns a promise, as
