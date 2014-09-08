@@ -1,8 +1,8 @@
 AMQP as Promised
 ================
 
-![Version](http://img.shields.io/npm/v/amqp-as-promised.svg)
-![Monthly downloads](http://img.shields.io/npm/dm/amqp-as-promised.svg)
+![Version](http://img.shields.io/npm/v/amqp-as-promised.svg) &nbsp;
+![Monthly downloads](http://img.shields.io/npm/dm/amqp-as-promised.svg) &nbsp;
 ![Build Status](https://ci.tt.se/jenkins/buildStatus/icon?job=amqp-as-promised)
 
 A high-level [promise-based](https://github.com/kriskowal/q) API built on
