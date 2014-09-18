@@ -3,17 +3,22 @@ Q               = require 'q'
 QueueWrapper    = require '../src/queue-wrapper'
 ExchangeWrapper = require '../src/exchange-wrapper'
 
-amqp = amqpc = amqpClient = nodeAmqp = undefined
+amqp = amqpc = amqpClient = nodeAmqp = exEvents = qEvents = undefined
             
 describe 'AmqpClient', ->
 
     beforeEach ->
         amqp = new EventEmitter
         queue = new EventEmitter
+        exEvents = new EventEmitter
+        qEvents = new EventEmitter
         amqp.queue = (name, obts, cb) ->
             cb queue
             queue.emit 'open'
-        amqp.exchange = (name, opts, cb) -> cb {}
+            return qEvents
+        amqp.exchange = (name, opts, cb) ->
+            cb {}
+            return exEvents
         nodeAmqp = { createConnection: stub().returns amqp }
         amqpClient = proxyquire '../src/amqp-client', 
             'amqp': nodeAmqp
@@ -47,6 +52,11 @@ describe 'AmqpClient', ->
             amqpc.queue('panda').then (q1) ->
                 amqpc.queue(q1).then (q2) ->
                     expect(q1).to.equal q2
+        it 'should catch errors signalled by amqp, and reject the queue promise', ->
+            amqp.queue = (name, opts, cb) ->
+                return qEvents
+            setTimeout (-> qEvents.emit 'error', 'Error!'), 10
+            amqpc.queue('panda').should.be.rejectedWith 'Error!'
 
     describe '.exchange()', ->
         beforeEach ->
@@ -67,4 +77,22 @@ describe 'AmqpClient', ->
             amqpc.exchange('panda').then (ex1) ->
                 amqpc.exchange(ex1).then (ex2) ->
                     expect(ex1).to.equal ex2
+
+        it 'should catch errors signalled by amqp, and reject the exchange promise', ->
+            amqp.exchange = (name, opts, cb) ->
+                return exEvents
+            setTimeout (-> exEvents.emit 'error', 'Error!'), 10
+            amqpc.exchange('panda').should.be.rejectedWith 'Error!'
+            
+    describe '.bind()', ->
         
+        it 'should catch exchange errors signalled by amqp, and reject the bind promise', ->
+            amqp.exchange = (name, opts, cb) ->
+                return exEvents
+            setTimeout (-> exEvents.emit 'error', 'Error!'), 10
+            amqpc.bind('panda', 'cub', '#', ->).should.be.rejectedWith 'Error!'
+        it 'should catch queue errors signalled by amqp, and reject the bind promise', ->
+            amqp.queue = (name, opts, cb) ->
+                return qEvents
+            setTimeout (-> qEvents.emit 'error', 'Error!'), 10
+            amqpc.bind('panda', 'cub', '#', ->).should.be.rejectedWith 'Error!'
