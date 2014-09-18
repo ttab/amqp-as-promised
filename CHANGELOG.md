@@ -3,7 +3,7 @@ Changelog
 
 ## Unreleased
 
-## 0.2.1 - 2014-09-08
+## 0.2.1 - 2014-09-18
 
 ### Changed
  * Better error handling in `amqpc.queue()`, `amqpc.exchange()` and
