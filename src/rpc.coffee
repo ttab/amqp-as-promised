@@ -34,7 +34,7 @@ module.exports = class Rpc
     rpc: (exchange, routingKey, msg, headers, options) =>
         throw new Error 'Must provide msg' unless msg
         Q.all([
-            @amqpc._exchange(exchange)
+            @amqpc.exchange(exchange)
             @returnChannel()
         ]).spread (ex, q) =>
             id = uuid.v4()

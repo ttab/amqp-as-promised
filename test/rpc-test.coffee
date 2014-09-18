@@ -10,7 +10,7 @@ class Queue
     subscribe: ->
 
 class Amqpc
-    _exchange: -> Q new Exchange
+    exchange: -> Q new Exchange
     queue: -> Q new Queue
 
 describe 'the Rpc constructor', ->
@@ -110,7 +110,7 @@ describe 'Rpc.rpc() called with headers', ->
 
     amqpc = new Amqpc
     mock(amqpc).expects('queue').returns Q queue
-    _exchange = mock(amqpc).expects('_exchange').withArgs('hello').returns(Q exchange)
+    mock(amqpc).expects('exchange').withArgs('hello').returns(Q exchange)
 
     rpc = new Rpc amqpc, { timeout: 10000 }
     promise = rpc.rpc('hello', 'world', 'msg', { 'customHeader', 'header1' })
@@ -138,7 +138,7 @@ describe 'Rpc.rpc() called without headers', ->
 
     amqpc =
         queue: -> Q queue
-        _exchange: -> Q exchange
+        exchange: -> Q exchange
 
     rpc = new Rpc amqpc, { timeout: 10000 }
     promise = rpc.rpc('hello', 'world', 'msg')
@@ -152,7 +152,6 @@ describe 'Rpc.rpc() called without headers', ->
 describe 'Rpc.rpc() called without msg object', ->
     amqpc =
         queue: -> Q queue
-        _exchange: -> Q exchange
     rpc = new Rpc amqpc
 
     it 'should throw an error', ->
@@ -164,7 +163,7 @@ describe 'Rpc.rpc() called with a timeout option', ->
     beforeEach ->
         amqpc =
             queue: -> Q { name: 'q123' }
-            _exchange: (name) -> Q new Exchange name
+            exchange: (name) -> Q new Exchange name
         rpc = new Rpc amqpc
         rpc.responses = set:spy()
         spy rpc, 'registerResponse'
