@@ -3,6 +3,9 @@ Changelog
 
 ## Unreleased
 
+## 0.2.2 - 2014-09-18
+ * Bugfix: clumsy typo in rpc.
+
 ## 0.2.1 - 2014-09-18
 
 ### Changed
