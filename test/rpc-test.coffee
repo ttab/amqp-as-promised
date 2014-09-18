@@ -112,7 +112,7 @@ describe 'Rpc.rpc() called with headers', ->
     mock(amqpc).expects('queue').returns Q queue
     _exchange = mock(amqpc).expects('_exchange').withArgs('hello').returns(Q exchange)
 
-    rpc = new Rpc amqpc
+    rpc = new Rpc amqpc, { timeout: 10000 }
     promise = rpc.rpc('hello', 'world', 'msg', { 'customHeader', 'header1' })
 
     it 'should return a promise', ->
@@ -140,7 +140,7 @@ describe 'Rpc.rpc() called without headers', ->
         queue: -> Q queue
         _exchange: -> Q exchange
 
-    rpc = new Rpc amqpc
+    rpc = new Rpc amqpc, { timeout: 10000 }
     promise = rpc.rpc('hello', 'world', 'msg')
 
     it 'should still result in a published message', ->
