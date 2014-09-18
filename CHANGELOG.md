@@ -1,6 +1,17 @@
 Changelog
 =========
 
+## Unreleased
+
+## 0.2.1 - 2014-09-08
+
+### Changed
+ * Better error handling in `amqpc.queue()`, `amqpc.exchange()` and
+   `amqpc.bind()`; errors caught during queue and exchange declaration
+   will now properly reject the promise.
+ * Bug fix in `amqpc.bind()`: omitting the queue name didn't work as
+   advertised in version 0.2.0, but should be fine now.
+
 ## 0.2.0 - 2014-09-08
 
 ### Changed
