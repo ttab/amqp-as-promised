@@ -3,21 +3,24 @@ Q               = require 'q'
 QueueWrapper    = require '../src/queue-wrapper'
 ExchangeWrapper = require '../src/exchange-wrapper'
 
-amqp = amqpc = amqpClient = nodeAmqp = exEvents = qEvents = undefined
+amqp = amqpc = amqpClient = nodeAmqp = queue = exchange = exEvents = qEvents = undefined
             
 describe 'AmqpClient', ->
 
     beforeEach ->
         amqp = new EventEmitter
         queue = new EventEmitter
+        queue.bind = -> @emit 'queueBindOk'
+        queue.subscribe = -> { addCallback: (cb) -> cb { } }
         exEvents = new EventEmitter
+        exchange = {}
         qEvents = new EventEmitter
         amqp.queue = (name, obts, cb) ->
             cb queue
             queue.emit 'open'
             return qEvents
         amqp.exchange = (name, opts, cb) ->
-            cb {}
+            cb exchange
             return exEvents
         nodeAmqp = { createConnection: stub().returns amqp }
         amqpClient = proxyquire '../src/amqp-client', 
@@ -91,8 +94,24 @@ describe 'AmqpClient', ->
                 return exEvents
             setTimeout (-> exEvents.emit 'error', 'Error!'), 10
             amqpc.bind('panda', 'cub', '#', ->).should.be.rejectedWith 'Error!'
+            
         it 'should catch queue errors signalled by amqp, and reject the bind promise', ->
             amqp.queue = (name, opts, cb) ->
                 return qEvents
             setTimeout (-> qEvents.emit 'error', 'Error!'), 10
             amqpc.bind('panda', 'cub', '#', ->).should.be.rejectedWith 'Error!'
+    
+        it 'should use the named (passive) queue when no queue name is supplied', ->
+            spy amqp, 'queue'
+            spy queue, 'bind'
+            amqpc.bind('panda', 'cub', '#', ->).then ->
+                amqp.queue.should.have.been.calledWith 'cub', { passive: true }
+                queue.bind.should.have.been.calledWith exchange, '#'
+
+        it 'should declare an anonymous queue when no queue name is supplied', ->
+            spy amqp, 'queue'
+            spy queue, 'bind'
+            amqpc.bind('panda', '#', ->).then ->
+                amqp.queue.should.have.been.calledWith '', { exclusive: true }
+                queue.bind.should.have.been.calledWith exchange, '#'
+        
