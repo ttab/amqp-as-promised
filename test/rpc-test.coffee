@@ -103,7 +103,13 @@ describe 'Rpc response expiration', ->
 describe 'Rpc.rpc() called with headers', ->
     exchange = new Exchange
     _publish = mock(exchange).expects('publish').withArgs 'world', 'msg',
-        match({ replyTo: 'q123', headers: { 'customHeader', 'header1' } }).and(match.has('correlationId')).and(match(deliveryMode:1))
+        match
+            replyTo:'q123',
+            headers:
+                timeout:10000,
+                myHeader1:42,
+                timestamp:'1970-01-01T00:00:00.042Z'
+        .and(match.has('correlationId')).and(match(deliveryMode:1))
 
     queue = new Queue
     queue.name = 'q123'
@@ -113,7 +119,7 @@ describe 'Rpc.rpc() called with headers', ->
     mock(amqpc).expects('exchange').withArgs('hello').returns(Q exchange)
 
     rpc = new Rpc amqpc, { timeout: 10000 }
-    promise = rpc.rpc('hello', 'world', 'msg', { 'customHeader', 'header1' })
+    promise = rpc.rpc('hello', 'world', 'msg', { 'myHeader1':42 }, timestamp:new Date(42))
 
     it 'should return a promise', ->
         promise.should.have.property 'then'
@@ -132,7 +138,12 @@ describe 'Rpc.rpc() called with headers', ->
 describe 'Rpc.rpc() called without headers', ->
     exchange = new Exchange
     _publish = mock(exchange).expects('publish').withArgs 'world', 'msg',
-        match({ replyTo: 'q123' }).and(match (val) -> val.correlationId? and Object.keys(val).indexOf('headers') == -1)
+        match
+            replyTo:'q123'
+            headers:
+                timeout:10001
+                timestamp:'1970-01-01T00:00:00.043Z'
+        .and(match (val) -> val.correlationId?)
 
     queue = { name: 'q123' }
 
@@ -140,8 +151,8 @@ describe 'Rpc.rpc() called without headers', ->
         queue: -> Q queue
         exchange: -> Q exchange
 
-    rpc = new Rpc amqpc, { timeout: 10000 }
-    promise = rpc.rpc('hello', 'world', 'msg')
+    rpc = new Rpc amqpc, { timeout: 10001 }
+    promise = rpc.rpc('hello', 'world', 'msg', undefined, timestamp:new Date(43))
 
     it 'should still result in a published message', ->
         _publish.verify()
@@ -159,7 +170,7 @@ describe 'Rpc.rpc() called without msg object', ->
 
 describe 'Rpc.rpc() called with a timeout option', ->
     amqpc = rpc = undefined
-    
+
     beforeEach ->
         amqpc =
             queue: -> Q { name: 'q123' }

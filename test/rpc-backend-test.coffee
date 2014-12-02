@@ -69,3 +69,29 @@ describe 'RpcBackend._mkcallback()', ->
 
     it 'should refuse messages without replyTo', ->
         exchange.publish.should.not.have.been.called
+
+describe 'RpcBackend._mkcallback()', ->
+    exchange = { publish: stub() }
+    handler = stub()
+
+    rpc = new RpcBackend {}
+    callback = rpc._mkcallback exchange, handler
+
+    callback 'msg', {hello:'world', timeout:1000},
+    {correlationId:'1234', replyTo:'reply', timestamp:10}
+
+    it 'should discard timeout messages where timestamp is in info', ->
+        exchange.publish.should.not.have.been.called
+
+describe 'RpcBackend._mkcallback()', ->
+    exchange = { publish: stub() }
+    handler = stub()
+
+    rpc = new RpcBackend {}
+    callback = rpc._mkcallback exchange, handler
+
+    callback 'msg', {hello:'world', timeout:1000, timestamp:'1970-01-01T00:00:00.043Z'},
+    {correlationId:'1234', replyTo:'reply'}
+
+    it 'should discard timeout messages where timestamp is in headers', ->
+        exchange.publish.should.not.have.been.called
