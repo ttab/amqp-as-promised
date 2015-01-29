@@ -3,6 +3,9 @@ Changelog
 
 ## Unreleased
 
+## 0.3.0 - 2015-01-29
+ * TTL is now set on RPC messages.
+
 ## 0.2.2 - 2014-09-18
  * Bugfix: clumsy typo in rpc.
 
