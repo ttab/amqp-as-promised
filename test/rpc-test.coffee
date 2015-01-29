@@ -42,7 +42,7 @@ describe 'Rpc.returnChannel()', ->
         c1.should.eql c2
 
 describe 'the subscription callback', ->
-    it 'should in turn invoke resolveResponse()', (done) ->
+    it 'should in turn invoke resolveResponse()', ->
         channel = new Queue
         channel.subscribe = (callback) ->
             setTimeout (-> callback({}, {}, { correlationId: '1234' })), 100
@@ -53,7 +53,6 @@ describe 'the subscription callback', ->
         rpc.returnChannel()
         rpc.resolveResponse = (corrId, msg) ->
             expect(corrId).to.equal '1234'
-            done()
 
 describe 'Rpc.registerResponse()', ->
     rpc = new Rpc new Amqpc
