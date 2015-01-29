@@ -6,9 +6,9 @@ DEFAULT_TIMEOUT = 1000
 
 module.exports = class Rpc
 
-    constructor: (@amqpc, options) ->
-        @cacheTimeout = options?.timeout || DEFAULT_TIMEOUT
-        @responses = new Cache timeout:@cacheTimeout
+    constructor: (@amqpc, @options) ->
+        @timeout = @options?.timeout || DEFAULT_TIMEOUT
+        @responses = new Cache timeout:@timeout
         @responses.on 'expired', (ev) ->
             if typeof ev?.value?.def.reject == 'function'
                 ev.value.def.reject new Error "timeout: #{ev.value.options?.info}"
@@ -45,22 +45,25 @@ module.exports = class Rpc
             # options stored locally
             options         = options || {}
             options.info    = options.info || "#{ex.name}/#{routingKey}"
+            # timeout
+            timeout = options.timeout || @timeout
             # timestamp for message
             timestamp = options.timestamp || new Date()
             # register the correlation id for response
             def = @registerResponse corrId, options
             # options provided to server
             opts =
-                deliveryMode:  1
-                replyTo:       q.name
-                correlationId: corrId
+                deliveryMode  :  1
+                replyTo       : q.name
+                correlationId : corrId
+                expiration    : "#{timeout}"
                 # defaults amqp timestamp is bogus. seconds resolution
-                timestamp:     timestamp.getTime() / 1000
+                timestamp     : timestamp.getTime() / 1000
 
             opts.headers = headers || {}
             # the timeout is provided to server side so server can
             # discard queued up timed out requests.
-            opts.headers.timeout = options.timeout || @cacheTimeout
+            opts.headers.timeout = timeout
             opts.headers.timestamp = timestamp.toISOString() # millisecond resolution
             ex.publish routingKey, msg, opts
             def.promise

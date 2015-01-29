@@ -168,6 +168,25 @@ describe 'Rpc.rpc() called without msg object', ->
     it 'should throw an error', ->
         expect(-> rpc.rpc('foo','bar')).to.throw 'Must provide msg'
 
+describe 'Rpc.rpc() should set message TTL', ->
+    exchange = queue = amqpc = undefined
+    
+    beforeEach ->
+        exchange = new Exchange
+        stub(exchange, 'publish').returns Q()
+        queue = new Queue
+        amqpc =
+            queue: -> Q queue
+            exchange: -> Q exchange
+        
+    it 'with the default timeout if none is specified', ->
+        rpc = new Rpc amqpc
+        stub(rpc, 'registerResponse').returns Q()
+        rpc.timeout.should.equal 1000
+        rpc.rpc('foo', 'bar', {}).then ->
+            exchange.publish.should.have.been.calledWith 'bar', {},
+                match headers: match timeout: 1000
+            
 describe 'Rpc.rpc() called with a timeout option', ->
     amqpc = rpc = undefined
 
