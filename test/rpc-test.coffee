@@ -108,7 +108,6 @@ describe 'Rpc.rpc() called with headers', ->
             headers:
                 timeout:10000,
                 myHeader1:42,
-                timestamp:'1970-01-01T00:00:00.042Z'
         .and(match.has('correlationId')).and(match(deliveryMode:1))
 
     queue = new Queue
@@ -142,7 +141,6 @@ describe 'Rpc.rpc() called without headers', ->
             replyTo:'q123'
             headers:
                 timeout:10001
-                timestamp:'1970-01-01T00:00:00.043Z'
         .and(match (val) -> val.correlationId?)
 
     queue = { name: 'q123' }

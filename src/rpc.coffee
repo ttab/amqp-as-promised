@@ -47,8 +47,6 @@ module.exports = class Rpc
             options.info    = options.info || "#{ex.name}/#{routingKey}"
             # timeout
             timeout = options.timeout || @timeout
-            # timestamp for message
-            timestamp = options.timestamp || new Date()
             # register the correlation id for response
             def = @registerResponse corrId, options
             # options provided to server
@@ -57,13 +55,10 @@ module.exports = class Rpc
                 replyTo       : q.name
                 correlationId : corrId
                 expiration    : "#{timeout}"
-                # defaults amqp timestamp is bogus. seconds resolution
-                timestamp     : timestamp.getTime() / 1000
 
             opts.headers = headers || {}
             # the timeout is provided to server side so server can
             # discard queued up timed out requests.
             opts.headers.timeout = timeout
-            opts.headers.timestamp = timestamp.toISOString() # millisecond resolution
             ex.publish routingKey, msg, opts
             def.promise
