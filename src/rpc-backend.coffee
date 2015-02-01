@@ -1,28 +1,21 @@
 log = require 'bog'
 Q   = require 'q'
 
-pick = (o, ks...) -> r = {}; r[k] = o[k] for k in ks when o.hasOwnProperty(k); r
-
 module.exports = class RpcBackend
     constructor: (@amqpc) ->
 
-    serve: (exname, topic, opts, callback) =>
-        if typeof opts == 'function'
-            callback = opts
-            opts = {}
+    serve: (exname, topic, callback) =>
         Q.all( [
             @amqpc.exchange exname, { type: 'topic', durable: true, autoDelete: false}
             @amqpc.exchange ''
             @amqpc.queue "#{exname}.#{topic}", { durable: true, autoDelete: false }
         ]).spread (ex, defaultex, queue) =>
             queue.bind ex, topic
-            subopts = pick (opts ? {}), 'ack', 'prefetchCount'
-            queue.subscribe subopts, @_mkcallback(defaultex, callback, subopts)
+            queue.subscribe @_mkcallback(defaultex, callback)
 
     # Creates a callback funtion which respects replyTo/correlationId
-    _mkcallback: (exchange, handler, opts) ->
-        doAck = !!opts?.ack
-        (msg, headers, info, ack) ->
+    _mkcallback: (exchange, handler) ->
+        (msg, headers, info) ->
             # no replyTo, no rpc
             return unless info.replyTo?
             # in amqp info is bogus since it got seconds as resolution
@@ -47,6 +40,4 @@ module.exports = class RpcBackend
             .fail (err) ->
                 log.error err
                 exchange.publish info.replyTo, { error: err.message }, opts
-            .finally ->
-                ack?.acknowledge() if doAck
             .done()
