@@ -147,7 +147,7 @@ to send a message to a service that honors the replyTo/correlationId contract:
 ## Using `amqpc` to serve RPC-style calls
 
 To set up a message consumer that automatically honors the
-replyTo/correlationId contrat:
+replyTo/correlationId contract:
 
     amqpc.serve 'myexchange', 'mytopic.#', (msg, headers, del) ->
         return { result: 'ok' }
