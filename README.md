@@ -149,7 +149,7 @@ to send a message to a service that honors the replyTo/correlationId contract:
 To set up a message consumer that automatically honors the
 replyTo/correlationId contract:
 
-    amqpc.serve 'myexchange', 'mytopic.#', (msg, headers, del) ->
+    amqpc.serve 'myexchange', 'mytopic.#', [options], (msg, headers, del) ->
         return { result: 'ok' }
 
 The value returned from the handler will be sent back on the queue
@@ -158,6 +158,11 @@ specified by the `replyTo` header, with the `correlationId` set.
 If an exception is thrown by the handler, it will be propagated back
 to the client as an object with a `error` property containing the
 error message.
+
+The optional `options` object can contain `ack:true` and
+`prefetchCount:[no]` which is supplied to queue subscribe. Notice that
+all fulfilled rpc requests are acknowledged regardless of
+success/failure.
 
 ## Shutting down
 
