@@ -73,6 +73,14 @@ describe 'AmqpClient', ->
                 amqpc.exchange('panda').then ->
                     amqp.exchange.should.have.been.calledWith 'panda', { passive: true, confirm: true }
 
+        describe 'should not set the confirm flag for the default exchange when creating an exchange', ->
+            it 'with explicit options', ->
+                amqpc.exchange('', { durable: true }).then ->
+                    amqp.exchange.should.have.been.calledWith '', { durable: true }
+            it 'without explicit options', ->
+                amqpc.exchange('').then ->
+                    amqp.exchange.should.have.been.calledWith '', { passive: true }
+
         it 'should return an ExchangeWrapper', ->
             amqpc.exchange('panda').should.eventually.be.an.instanceof ExchangeWrapper
 

@@ -45,7 +45,9 @@ module.exports = (conf) ->
             return (prom.then (ex) -> def.resolve ex) if prom
             mq._ttExchanges[name] = def.promise
             opts = opts ? {passive:true}
-            opts.confirm = true
+            # the default exchange does not send basic.ack, so we will
+            # never receive any callbacks in exchange wrapper.
+            opts.confirm = true unless name == ''
             mq.exchange(name, opts, (ex) ->
                 log.info 'exchange ready:', ex.name
                 def.resolve new ExchangeWrapper ex

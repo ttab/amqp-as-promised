@@ -7,11 +7,13 @@ module.exports = class ExchangeWrapper
 
     publish: (routingKey, message, options) ->
         def = Q.defer()
-        @exchange.publish routingKey, message, options, (err) ->
-            if err
-                def.reject err
-            else
-                def.resolve()
+        unless @exchange.options?.confirm
+            @exchange.publish routingKey, message, options
+            def.resolve()
+        else
+            @exchange.publish routingKey, message, options, (err) ->
+                if err
+                    def.reject err
+                else
+                    def.resolve()
         def.promise
-        
-    
