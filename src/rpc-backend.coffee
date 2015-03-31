@@ -32,12 +32,30 @@ module.exports = class RpcBackend
                     log.info "Discarding timed out message
                     (#{info.replyTo}, #{info.correlationId})"
                     return
+
+            # these options are used when publishing the result and/or
+            # error messages
             opts = {}
             opts.correlationId = info.correlationId if info.correlationId?
 
-            Q.when(handler(msg, headers)).then (res) ->
-                exchange.publish info.replyTo, res, opts
+            # we need to keep track of our queued progress messages
+            progress = []
+
+            Q.when handler msg, headers, (prgs) ->
+                # this is the progress callback, which will queue a progress message
+                if info.correlationId
+                    progress.push exchange.publish info.replyTo, prgs,
+                        correlationId: info.correlationId + "#x-progress:" + progress.length
+            .then (res) ->
+                # first, wait for queued progress messages to be sent
+                Q.all progress
+                .then ->
+                    # then send the result
+                    exchange.publish info.replyTo, res, opts
             .fail (err) ->
                 log.error err
                 exchange.publish info.replyTo, { error: err.message }, opts
-            .done()
+            .fail (err) ->
+                # we need to be careful to catch any errors caused by
+                # the publish call in the error handling
+                log.error err

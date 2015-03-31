@@ -1,105 +1,117 @@
 Q               = require 'q'
 RpcBackend      = require '../src/rpc-backend'
 
-describe 'RpcBackend.serve()', ->
-    callback = ->
-    ex = { name: 'hello' }
-    qu = { bind: stub(), subscribe: stub() }
-    def = {}
+describe 'RpcBackend', ->
 
-    amqpc =
-        exchange: stub()
-        queue: stub().returns Q.fcall -> qu
-        bind: stub()
+    describe '.serve()', ->
+        callback = ->
+        ex = { name: 'hello' }
+        qu = { bind: stub(), subscribe: stub() }
+        def = {}
 
-    amqpc.exchange.withArgs('hello').returns(ex).withArgs('').returns(def)
+        amqpc =
+            exchange: stub()
+            queue: stub().returns Q.fcall -> qu
+            bind: stub()
 
-    rpc = new RpcBackend amqpc
+        amqpc.exchange.withArgs('hello').returns(ex).withArgs('').returns(def)
 
-    it 'should return a promise', ->
-        (rpc.serve 'hello', 'world', callback).should.be.fulfilled
-    it 'should create the named exchange', ->
-        amqpc.exchange.should.have.been.calledWith 'hello', { type: 'topic', durable: true, autoDelete: false }
-    it 'should fetch the default exchange', ->
-        amqpc.exchange.should.have.been.calledWith ''
-    it 'should create a request queue', ->
-        amqpc.queue.should.have.been.calledWith 'hello.world', { durable: true, autoDelete: false }
-    it 'should bind the exchange to the queue', ->
-        qu.bind.should.have.been.calledWith ex, 'world'
-    it 'should subscribe the callback to the request queue', ->
-        qu.subscribe.should.have.been.calledWith match.func
+        rpc = new RpcBackend amqpc
 
-describe 'RpcBackend._mkcallback()', ->
-    exchange = { publish: stub() }
+        it 'should return a promise', ->
+            (rpc.serve 'hello', 'world', callback).should.be.fulfilled
+        it 'should create the named exchange', ->
+            amqpc.exchange.should.have.been.calledWith 'hello', { type: 'topic', durable: true, autoDelete: false }
+        it 'should fetch the default exchange', ->
+            amqpc.exchange.should.have.been.calledWith ''
+        it 'should create a request queue', ->
+            amqpc.queue.should.have.been.calledWith 'hello.world', { durable: true, autoDelete: false }
+        it 'should bind the exchange to the queue', ->
+            qu.bind.should.have.been.calledWith ex, 'world'
+        it 'should subscribe the callback to the request queue', ->
+            qu.subscribe.should.have.been.calledWith match.func
 
-    promiseHandler = stub().returns Q.fcall -> 'returnValue'
-    inlineHandler  = stub().returns 'returnValue'
+    describe '._mkcallback()', ->
+        exchange = handler = rpc = callback = undefined
+        beforeEach ->
+            exchange = { publish: stub() }
+            handler = stub().returns Q.fcall -> 'returnValue'
+            rpc = new RpcBackend {}
+            callback = rpc._mkcallback exchange, handler
 
-    rpc = new RpcBackend {}
-    promiseCallback = rpc._mkcallback exchange, promiseHandler
-    inlineCallback  = rpc._mkcallback exchange, inlineHandler
+        it 'should return callback function', ->
+            callback.should.be.a.func
 
-    it 'should return callback function', ->
-        promiseCallback.should.be.a.func
-        inlineCallback.should.be.a.func
+        it 'when invoked, the callback should in turn invoke the actual handler with msg and headers', ->
+            callback 'msg', { hello: 'world' }, { correlationId: '1234', replyTo: 'reply'}
+            .then ->
+                handler.should.have.been.calledWith 'msg', { hello: 'world' }
 
-    promiseCallback 'msg', { hello: 'world' }, { correlationId: '1234', replyTo: 'reply'}
-    inlineCallback  'msg', { hello: 'world' }, { correlationId: '4321', replyTo: 'reply'}
+        it 'when invoked, the callback should publish to the given exchange', ->
+            callback 'msg', { hello: 'world' }, { correlationId: '1234', replyTo: 'reply'}
+            .then ->
+                exchange.publish.should.have.been.calledWith 'reply', 'returnValue', { correlationId: '1234' }
 
-    it 'when invoked, the callback should in turn invoke the actual handler with msg and headers', ->
-        promiseHandler.should.have.been.calledWith 'msg', { hello: 'world' }
-    it 'should also support non-promisified functions as handler', ->
-        inlineHandler.should.have.been.calledWith 'msg', { hello: 'world' }
-    it 'when invoked, the callback should publish to the given exchange', ->
-        exchange.publish.should.have.been.calledWith 'reply', 'returnValue', { correlationId: '1234' }
-        exchange.publish.should.have.been.calledWith 'reply', 'returnValue', { correlationId: '4321' }
+        it 'should pass errors thrown by the handler on to the client', ->
+            handler.returns Q.fcall -> throw new Error('error msg')
+            callback 'msg', { hello: 'world' }, { correlationId: '1234', replyTo: 'reply'}
+            .then ->
+                exchange.publish.should.have.been.calledWith 'reply', { error: 'error msg'}, match.object
 
-describe 'RpcBackend._mkcallback()', ->
-    exchange = { publish: stub() }
-    handler = stub().returns Q.fcall -> throw new Error('error msg')
+        it 'should refuse messages without replyTo', ->
+            expect(callback 'msg', { hello: 'world' }, { correlationId: '1234'}).to.be.undefined
+            handler.should.not.have.been.called
+            exchange.publish.should.not.have.been.called
 
-    rpc = new RpcBackend {}
-    callback = rpc._mkcallback exchange, handler
+        it 'should discard timeout messages where timestamp is in info', ->
+            expect(callback 'msg', {hello:'world', timeout:1000}, {correlationId:'1234', replyTo:'reply', timestamp:10}).to.be.undefined
+            handler.should.not.have.been.called
+            exchange.publish.should.not.have.been.called
 
-    callback 'msg', { hello: 'world' }, { correlationId: '1234', replyTo: 'reply'}
+        it 'should discard timeout messages where timestamp is in headers', ->
+            expect(callback 'msg', {hello:'world', timeout:1000, timestamp:'1970-01-01T00:00:00.043Z'}, {correlationId:'1234', replyTo:'reply'}).to.be.undefined
+            handler.should.not.have.been.called
+            exchange.publish.should.not.have.been.called
 
-    it 'should pass errors thrown by the handler on to the client', ->
-        exchange.publish.should.have.been.calledWith 'reply', { error: 'error msg'}, match.object
+        it 'should handle errors in exchange.publish', ->
+            exchange.publish.throws new Error 'such fail!'
+            callback('msg', { hello: 'world' }, { correlationId: '1234', replyTo: 'reply'})
+                .should.eventually.be.undefined
 
-describe 'RpcBackend._mkcallback()', ->
-    exchange = { publish: stub() }
-    handler = stub()
+        it 'should invoke the handler with a progress callback', ->
+            callback 'msg', { hello: 'world' }, { correlationId: '1234', replyTo: 'reply'}
+            .then ->
+                handler.should.have.been.calledWith match.string, match.object, match.func
 
-    rpc = new RpcBackend {}
-    callback = rpc._mkcallback exchange, handler
+        it 'when invoked, the progress callback should publish progress messages', ->
+            handler = (msg, headers, progress) ->
+                Q.fcall ->
+                    progress 'such progress! (1)'
+                .then ->
+                    progress 'such progress! (2)'
+                    return 'returnValues'
+            callback = rpc._mkcallback exchange, handler
 
-    callback 'msg', { hello: 'world' }, { correlationId: '1234'}
+            callback 'msg', { hello: 'world' }, { correlationId: '1234', replyTo: 'reply'}
+            .then ->
+                exchange.publish.should.have.been.calledWith 'reply', 'such progress! (1)', { correlationId: '1234#x-progress:0' }
+                exchange.publish.should.have.been.calledWith 'reply', 'such progress! (2)', { correlationId: '1234#x-progress:1' }
+                exchange.publish.should.have.been.calledWith 'reply', 'returnValues', { correlationId: '1234' }
 
-    it 'should refuse messages without replyTo', ->
-        exchange.publish.should.not.have.been.called
+    describe '._mkcallback()', ->
+        exchange = { publish: stub() }
 
-describe 'RpcBackend._mkcallback()', ->
-    exchange = { publish: stub() }
-    handler = stub()
+        inlineHandler  = stub().returns 'returnValue'
 
-    rpc = new RpcBackend {}
-    callback = rpc._mkcallback exchange, handler
+        rpc = new RpcBackend {}
+        inlineCallback  = rpc._mkcallback exchange, inlineHandler
 
-    callback 'msg', {hello:'world', timeout:1000},
-    {correlationId:'1234', replyTo:'reply', timestamp:10}
+        it 'should return callback function', ->
+            inlineCallback.should.be.a.func
 
-    it 'should discard timeout messages where timestamp is in info', ->
-        exchange.publish.should.not.have.been.called
+        inlineCallback  'msg', { hello: 'world' }, { correlationId: '4321', replyTo: 'reply'}
 
-describe 'RpcBackend._mkcallback()', ->
-    exchange = { publish: stub() }
-    handler = stub()
-
-    rpc = new RpcBackend {}
-    callback = rpc._mkcallback exchange, handler
-
-    callback 'msg', {hello:'world', timeout:1000, timestamp:'1970-01-01T00:00:00.043Z'},
-    {correlationId:'1234', replyTo:'reply'}
-
-    it 'should discard timeout messages where timestamp is in headers', ->
-        exchange.publish.should.not.have.been.called
+        it 'should support non-promisified functions as handler', ->
+            inlineHandler.should.have.been.calledWith 'msg', { hello: 'world' }
+        it 'when invoked, the callback should publish to the given exchange', ->
+            exchange.publish.should.have.been.calledWith 'reply', 'returnValue', { correlationId: '4321' }

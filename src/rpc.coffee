@@ -30,10 +30,14 @@ module.exports = class Rpc
         return def
 
     resolveResponse: (corrId, msg, headers) =>
-        if @responses.get corrId
-            @responses.get(corrId).def.resolve msg
-            @responses.remove corrId
-
+        [ corrId, prgsSeq ] = corrId.split '#x-progress:'
+        if response = @responses.get corrId
+            if prgsSeq
+                response.def.notify msg
+            else
+                response.def.resolve msg
+                @responses.remove corrId
+        
     rpc: (exchange, routingKey, msg, headers, options) =>
         throw new Error 'Must provide msg' unless msg
         Q.all([
