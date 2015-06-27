@@ -31,20 +31,28 @@ describe 'RpcBackend.serve()', ->
 
 describe 'RpcBackend._mkcallback()', ->
     exchange = { publish: stub() }
-    handler = stub().returns Q.fcall -> 'returnValue'
+
+    promiseHandler = stub().returns Q.fcall -> 'returnValue'
+    inlineHandler  = stub().returns 'returnValue'
 
     rpc = new RpcBackend {}
-    callback = rpc._mkcallback exchange, handler
+    promiseCallback = rpc._mkcallback exchange, promiseHandler
+    inlineCallback  = rpc._mkcallback exchange, inlineHandler
 
     it 'should return callback function', ->
-        callback.should.be.a.func
+        promiseCallback.should.be.a.func
+        inlineCallback.should.be.a.func
 
-    callback 'msg', { hello: 'world' }, { correlationId: '1234', replyTo: 'reply'}
+    promiseCallback 'msg', { hello: 'world' }, { correlationId: '1234', replyTo: 'reply'}
+    inlineCallback  'msg', { hello: 'world' }, { correlationId: '4321', replyTo: 'reply'}
 
     it 'when invoked, the callback should in turn invoke the actual handler with msg and headers', ->
-        handler.should.have.been.calledWith 'msg', { hello: 'world' }
+        promiseHandler.should.have.been.calledWith 'msg', { hello: 'world' }
+    it 'should also support non-promisified functions as handler', ->
+        inlineHandler.should.have.been.calledWith 'msg', { hello: 'world' }
     it 'when invoked, the callback should publish to the given exchange', ->
         exchange.publish.should.have.been.calledWith 'reply', 'returnValue', { correlationId: '1234' }
+        exchange.publish.should.have.been.calledWith 'reply', 'returnValue', { correlationId: '4321' }
 
 describe 'RpcBackend._mkcallback()', ->
     exchange = { publish: stub() }
