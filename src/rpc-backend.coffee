@@ -35,7 +35,7 @@ module.exports = class RpcBackend
             opts = {}
             opts.correlationId = info.correlationId if info.correlationId?
 
-            handler(msg, headers).then (res) ->
+            Q.when(handler(msg, headers)).then (res) ->
                 exchange.publish info.replyTo, res, opts
             .fail (err) ->
                 log.error err
