@@ -1,5 +1,6 @@
 Q               = require 'q'
 RpcBackend      = require '../src/rpc-backend'
+{gunzipSync, gzipSync} = require 'zlib'
 
 describe 'RpcBackend', ->
 
@@ -81,10 +82,10 @@ describe 'RpcBackend', ->
         it 'should invoke the handler with a progress callback', ->
             callback 'msg', { hello: 'world' }, { correlationId: '1234', replyTo: 'reply'}
             .then ->
-                handler.should.have.been.calledWith match.string, match.object, match.func
+                handler.should.have.been.calledWith match.string, match.object, match.object, match.func
 
         it 'when invoked, the progress callback should publish progress messages', ->
-            handler = (msg, headers, progress) ->
+            handler = (msg, headers, del, progress) ->
                 Q.fcall ->
                     progress 'such progress! (1)'
                 .then ->
@@ -97,6 +98,24 @@ describe 'RpcBackend', ->
                 exchange.publish.should.have.been.calledWith 'reply', 'such progress! (1)', { correlationId: '1234#x-progress:0' }
                 exchange.publish.should.have.been.calledWith 'reply', 'such progress! (2)', { correlationId: '1234#x-progress:1' }
                 exchange.publish.should.have.been.calledWith 'reply', 'returnValues', { correlationId: '1234' }
+
+        it 'the progress callback also compresses if compress header', ->
+            handler = (msg, headers, del, progress) ->
+                Q.fcall ->
+                    progress 'such progress! (1)'
+                .then ->
+                    progress 'such progress! (2)'
+                    return 'returnValues'
+            callback = rpc._mkcallback exchange, handler
+            v = gzipSync Buffer JSON.stringify panda:true
+            callback v, { hello: 'world', compress:'json' },
+            { correlationId: '1234', replyTo: 'reply'}
+            .then ->
+                [rk1, p1] = exchange.publish.args[0]
+                [rk2, p2] = exchange.publish.args[1]
+                JSON.parse(gunzipSync(p1).toString()).should.eql 'such progress! (1)'
+                JSON.parse(gunzipSync(p2).toString()).should.eql 'such progress! (2)'
+
 
     describe '._mkcallback()', ->
         exchange = { publish: stub() }
@@ -115,3 +134,51 @@ describe 'RpcBackend', ->
             inlineHandler.should.have.been.calledWith 'msg', { hello: 'world' }
         it 'when invoked, the callback should publish to the given exchange', ->
             exchange.publish.should.have.been.calledWith 'reply', 'returnValue', { correlationId: '4321' }
+
+    describe '._mkcallback() with compressed:json', ->
+
+        exchange = handler = rpc = callback = undefined
+        beforeEach ->
+            exchange = { publish: stub() }
+            handler = stub().returns Q.fcall -> return:'panda'
+            rpc = new RpcBackend {}
+            callback = rpc._mkcallback exchange, handler
+
+        it 'should decompress/deserialize the json to the handler', ->
+            v = gzipSync Buffer JSON.stringify panda:42
+            callback(v, {compress:'json'}, replyTo:'123').then ->
+                handler.should.have.been.calledWith panda:42
+
+        it 'should (json) compress the response from the handler', ->
+            v = gzipSync Buffer JSON.stringify panda:42
+            callback(v, {compress:'json'}, replyTo:'123').then ->
+                [routingKey, buf] = exchange.publish.args[0]
+                routingKey.should.eql '123'
+                b2 = gunzipSync buf
+                JSON.parse(b2.toString()).should.eql return:'panda'
+
+        it 'should compress the (buffer) response from the handler', ->
+            handler = stub().returns Q.fcall -> Buffer('panda')
+            callback = rpc._mkcallback exchange, handler
+            v = gzipSync Buffer JSON.stringify panda:42
+            callback(v, {compress:'json'}, replyTo:'123').then ->
+                [routingKey, buf] = exchange.publish.args[0]
+                routingKey.should.eql '123'
+                b2 = gunzipSync buf
+                b2.toString().should.eql 'panda'
+
+    describe '._mkcallback() with compressed:buffer', ->
+
+        exchange = handler = rpc = callback = undefined
+        beforeEach ->
+            exchange = { publish: stub() }
+            handler = stub().returns Q.fcall -> return:'panda'
+            rpc = new RpcBackend {}
+            callback = rpc._mkcallback exchange, handler
+
+        it 'should decompress/deserialize the json to the handler', ->
+            v = gzipSync Buffer('panda')
+            callback(v, {compress:'buffer'}, replyTo:'123').then ->
+                [buf, headers] = handler.args[0]
+                buf.toString().should.eql 'panda'
+                expect(headers?.compress).to.eql 'buffer'

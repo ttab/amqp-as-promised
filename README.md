@@ -91,18 +91,22 @@ Examples
 
 ## Using `amqpc` to publish
 
-    amqpc.exchange('myexchange').then (ex) ->
-        msg = {}
-        msg.domain = domain
-        ex.publish('mytopic.foo', msg).then ->
-			console.log 'published message!'
+```coffee
+amqpc.exchange('myexchange').then (ex) ->
+    msg = {}
+    msg.domain = domain
+    ex.publish('mytopic.foo', msg).then ->
+        console.log 'published message!'
+```
 
 ## Using `amqpc` to bind
 
 This is shorthand for binding and subscribing.
 
-    amqpc.bind 'myexchange', 'myqueue', 'mytopic.#', (msg, headers, del) ->
-        console.log 'received message', msg
+```coffee
+amqpc.bind 'myexchange', 'myqueue', 'mytopic.#', (msg, headers, del) ->
+    console.log 'received message', msg
+```
 
 To bind an anonymous queue.
 
@@ -111,28 +115,37 @@ To bind an anonymous queue.
 
 Or even shorter
 
-    amqpc.bind 'myexchange', 'mytopic.#', (msg, headers, del) ->
-        console.log 'received message', msg
+```coffee
+amqpc.bind 'myexchange', 'mytopic.#', (msg, headers, del) ->
+    console.log 'received message', msg
+```
 
 To bind the queue to the exchange without subscribing to it, skip the
 last parameter (the subscription callback). This is essentially the
 same as `queue.bind myexchange, 'mytopic'`, except the exchange and
 queue are specified by their names:
 
-    amqpc.bind 'myexchange', 'myqueue', 'mytopic.#'
+```coffee
+amqpc.bind 'myexchange', 'myqueue', 'mytopic.#'
+```
 
 ## Using `amqpc` to get an anomymous queue
 
 To create an anomymous queue.
 
-    amqpc.queue().then (q) -> console.log 'my queue', q
+```coffee
+amqpc.queue().then (q) -> console.log 'my queue', q
+```
 
 ## Using `amqpc` to do RPC-style calls
 
 to send a message to a service that honors the replyTo/correlationId contract:
 
-    amqpc.rpc('myexchange', 'routing.key', msg, [headers], [options]).then (response) ->
-        console.log 'received message', response
+
+```coffee
+amqpc.rpc('myexchange', 'routing.key', msg, [headers], [options]).then (response) ->
+    console.log 'received message', response
+```
 
  * `headers` is an optional parameter holding any custom headers to be
    passed on the RPC service.
@@ -149,8 +162,10 @@ to send a message to a service that honors the replyTo/correlationId contract:
 To set up a message consumer that automatically honors the
 replyTo/correlationId contract:
 
-    amqpc.serve 'myexchange', 'mytopic.#', (msg, headers, del) ->
-        return { result: 'ok' }
+```coffee
+amqpc.serve 'myexchange', 'mytopic.#', (msg, headers, del) ->
+    return { result: 'ok' }
+```
 
 The value returned from the handler will be sent back on the queue
 specified by the `replyTo` header, with the `correlationId` set.
@@ -161,13 +176,15 @@ error message.
 
 ## Shutting down
 
-    graceful = (opts) ->
-        log.info 'Shutting down'
-        amqpc.shutdown().then ->
-            process.exit 0
+```coffee
+graceful = (opts) ->
+    log.info 'Shutting down'
+    amqpc.shutdown().then ->
+        process.exit 0
 
-    process.on 'SIGINT', graceful
-    process.on 'SIGTERM', graceful
+process.on 'SIGINT', graceful
+process.on 'SIGTERM', graceful
+```
 
 API
 ===
@@ -279,3 +296,21 @@ the return value:
  * `options` - valid options are:
    + `timeout` - timeout in milliseconds. If none is specified, the
      default value specified when creating the client is used.
+   + `compress` - set to `true` to use [payload compression](#compression)
+
+### Compression
+
+*Since 0.4.0*
+
+The RPC mechanism has a transparent payload gzip compression of JSON
+objects Buffer. When activated both request and response are
+compressed. To activate, the rpc client must ask for compression by setting
+the `compress` option.
+
+Example
+
+```coffee
+amqpc.rpc('myexchange', 'routing.key', msg, [headers], {compress:true}).then (response) ->
+    console.log 'received message', response
+```
+

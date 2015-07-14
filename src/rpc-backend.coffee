@@ -1,5 +1,7 @@
-log = require 'bog'
-Q   = require 'q'
+log   = require 'bog'
+Q     = require 'q'
+merge = require './merge'
+{compress, decompress} = require './compressor'
 
 module.exports = class RpcBackend
     constructor: (@amqpc) ->
@@ -41,11 +43,29 @@ module.exports = class RpcBackend
             # we need to keep track of our queued progress messages
             progress = []
 
-            Q.when handler msg, headers, (prgs) ->
-                # this is the progress callback, which will queue a progress message
-                if info.correlationId
-                    progress.push exchange.publish info.replyTo, prgs,
+            # maybe decompress compressed payload
+            [ct, p] = decompress msg, headers
+            merge info, ct
+
+            p.then (payload) ->
+                Q.when handler payload, headers, info, (prgs) ->
+                    return unless info.correlationId
+                    popts =
                         correlationId: info.correlationId + "#x-progress:" + progress.length
+                    [h, p] = compress prgs, headers
+                    opts.headers = h if h
+                    prev = progress[progress.length - 1] ? Q() # previous
+                    # progress wait for previous and payload
+                    # compressions this is because we could end up in
+                    # out-of-order x-progress if we first do a very
+                    # large (compressed) payload followed by a very
+                    # small one.
+                    progress.push Q.all([prev, p]).spread (_, payload) ->
+                        exchange.publish info.replyTo, payload, popts
+            .then (res) ->
+                [h, p] = compress res, headers
+                opts.headers = h if h
+                return p
             .then (res) ->
                 # first, wait for queued progress messages to be sent
                 Q.all progress

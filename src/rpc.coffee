@@ -1,6 +1,8 @@
 Q     = require 'q'
 uuid  = require 'uuid'
 Cache = require 'mem-cache'
+merge = require './merge'
+{compress, decompress} = require './compressor'
 
 DEFAULT_TIMEOUT = 1000
 
@@ -19,7 +21,7 @@ module.exports = class Rpc
             @_returnChannel.then (q) =>
                 q.subscribe (msg, headers, deliveryInfo) =>
                     if deliveryInfo?
-                        @resolveResponse deliveryInfo.correlationId, msg
+                        @resolveResponse deliveryInfo.correlationId, msg, headers
         return @_returnChannel
 
     registerResponse: (corrId, options) =>
@@ -32,12 +34,16 @@ module.exports = class Rpc
     resolveResponse: (corrId, msg, headers) =>
         [ corrId, prgsSeq ] = corrId.split '#x-progress:'
         if response = @responses.get corrId
-            if prgsSeq
-                response.def.notify msg
-            else
-                response.def.resolve msg
-                @responses.remove corrId
-        
+            [ct, p] = decompress msg, headers
+            p.then (payload) =>
+                if prgsSeq
+                    response.def.notify payload
+                else
+                    @responses.remove corrId
+                    response.def.resolve payload
+            .fail (err) ->
+                response.def.reject err
+
     rpc: (exchange, routingKey, msg, headers, options) =>
         throw new Error 'Must provide msg' unless msg
         Q.all([
@@ -51,6 +57,7 @@ module.exports = class Rpc
             options.info    = options.info || "#{ex.name}/#{routingKey}"
             # timeout
             timeout = options.timeout || @timeout
+
             # register the correlation id for response
             def = @registerResponse corrId, options
             # options provided to server
@@ -60,9 +67,20 @@ module.exports = class Rpc
                 correlationId : corrId
                 expiration    : "#{timeout}"
 
+            # construct headers
             opts.headers = headers || {}
+
             # the timeout is provided to server side so server can
             # discard queued up timed out requests.
             opts.headers.timeout = timeout
-            ex.publish routingKey, msg, opts
-            def.promise
+
+            # maybe compress the payload
+            [h, p] = compress msg, options
+            merge opts.headers, h
+
+            # wait for (maybe) compressed payload and then publish
+            p.then (payload) ->
+                ex.publish routingKey, payload, opts
+            .then ->
+                # promise for rpc return
+                def.promise
