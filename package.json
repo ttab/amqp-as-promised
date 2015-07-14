@@ -9,7 +9,7 @@
   "main": "lib/index",
   "scripts": {
     "test": "mocha",
-    "prepublish": "rm -rf lib & ./node_modules/.bin/coffee -o lib/ -c src/ & mocha --reporter spec"
+    "prepublish": "./node_modules/.bin/coffee -o lib -c src"
   },
   "keywords": [
     "amqp",
@@ -22,9 +22,9 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "q": "~1.0.0",
-    "amqp": "~0.2.0",
-    "uuid": "~1.4.1",
+    "q": "~1.4.1",
+    "amqp": "~0.2.4",
+    "uuid": "~2.0.1",
     "bog": "1.0.0",
     "mem-cache": "0.0.4"
   },
