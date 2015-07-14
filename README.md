@@ -314,3 +314,29 @@ amqpc.rpc('myexchange', 'routing.key', msg, [headers], {compress:true}).then (re
     console.log 'received message', response
 ```
 
+### Progress
+
+*Since 0.4.0*
+
+The RPC supports
+[Q style progress](https://github.com/kriskowal/q#progress-notification)
+which can be used to send partial responses.
+
+Example
+
+```coffee
+amqpc.serve 'myexchange', 'routing.key',  (msg, headers, del, progress) ->
+    ... do some stuff
+    progress "it's almost done!!!"
+    ... do more stuff
+    return "here's the result"
+```
+
+Client side
+
+```coffee
+amqpc.rpc('myexchange', 'routing.key', msg).progress (partial) ->
+    console.log 'the server tries to tell me', partial
+.then (response) ->
+    console.log 'received message', response
+```
