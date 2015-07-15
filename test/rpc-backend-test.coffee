@@ -111,10 +111,12 @@ describe 'RpcBackend', ->
             callback v, { hello: 'world', compress:'json' },
             { correlationId: '1234', replyTo: 'reply'}
             .then ->
-                [rk1, p1] = exchange.publish.args[0]
-                [rk2, p2] = exchange.publish.args[1]
+                [rk1, p1, o1] = exchange.publish.args[0]
+                [rk2, p2, o2] = exchange.publish.args[1]
                 JSON.parse(gunzipSync(p1).toString()).should.eql 'such progress! (1)'
                 JSON.parse(gunzipSync(p2).toString()).should.eql 'such progress! (2)'
+                expect(o1?.headers?.compress).to.eql 'json'
+                expect(o2?.headers?.compress).to.eql 'json'
 
 
     describe '._mkcallback()', ->

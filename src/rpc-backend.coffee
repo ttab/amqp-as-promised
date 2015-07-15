@@ -53,7 +53,7 @@ module.exports = class RpcBackend
                     popts =
                         correlationId: info.correlationId + "#x-progress:" + progress.length
                     [h, p] = compress prgs, headers
-                    opts.headers = h if h
+                    popts.headers = h if h
                     prev = progress[progress.length - 1] ? Q() # previous
                     # progress wait for previous and payload
                     # compressions this is because we could end up in
