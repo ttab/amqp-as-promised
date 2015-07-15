@@ -20,8 +20,7 @@ module.exports = class Rpc
             @_returnChannel = @amqpc.queue('', { autoDelete: true, exclusive: true})
             @_returnChannel.then (q) =>
                 q.subscribe (msg, headers, deliveryInfo) =>
-                    if deliveryInfo?
-                        @resolveResponse deliveryInfo.correlationId, msg, headers
+                    @resolveResponse deliveryInfo?.correlationId, msg, headers
         return @_returnChannel
 
     registerResponse: (corrId, options) =>
@@ -32,7 +31,7 @@ module.exports = class Rpc
         return def
 
     resolveResponse: (corrId, msg, headers) =>
-        [ corrId, prgsSeq ] = corrId.split '#x-progress:'
+        [ corrId, prgsSeq ] = (corrId ? '').split '#x-progress:'
         if response = @responses.get corrId
             [ct, p] = decompress msg, headers
             p.then (payload) =>
