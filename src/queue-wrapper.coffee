@@ -31,7 +31,7 @@ module.exports = class QueueWrapper
 
     unbind: =>
         def = Q.defer()
-        unless @_ex
+        if !@_ex or !@amqpc.conn
             def.resolve this
             return def.promise
         @amqpc.conn.then (mq) =>
