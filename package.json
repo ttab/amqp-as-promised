@@ -29,12 +29,12 @@
     "mem-cache": "0.0.4"
   },
   "devDependencies": {
-    "mocha": "~1.18.2",
-    "chai": "~1.9.0",
-    "chai-as-promised": "~4.1.1",
-    "sinon": "~1.8.2",
-    "sinon-chai": "~2.5.0",
-    "coffee-script": "~1.7.1",
-    "proxyquire": "~0.6.0"
+    "chai": "^3.4.1",
+    "chai-as-promised": "^5.2.0",
+    "coffee-script": "^1.10.0",
+    "mocha": "^2.3.4",
+    "proxyquire": "^1.7.3",
+    "sinon": "~1.17.2",
+    "sinon-chai": "^2.8.0"
   }
 }
