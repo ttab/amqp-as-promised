@@ -5,7 +5,7 @@ ExchangeWrapper = require './exchange-wrapper'
 QueueWrapper    = require './queue-wrapper'
 
 module.exports = (conf) ->
-        
+
     local = conf.local || process.env.LOCAL
     log.info("local means no amqp connection") if local
 
@@ -35,7 +35,7 @@ module.exports = (conf) ->
         def.promise
 
     exchange = (name, opts) ->
-        return Q(name) if name instanceof ExchangeWrapper 
+        return Q(name) if name instanceof ExchangeWrapper
         throw new Error 'Unable connect exchange when local' if local
         throw new Error 'Unable connect exchange when shutdown' if isShutdown
         def = Q.defer()
@@ -57,7 +57,7 @@ module.exports = (conf) ->
         def.promise
 
     queue = (qname, opts) =>
-        return Q(qname) if qname instanceof QueueWrapper 
+        return Q(qname) if qname instanceof QueueWrapper
         throw new Error 'Unable to connect queue when local' if local
         throw new Error 'Unable to connect queue shutdown' if isShutdown
         if qname != null and typeof qname == 'object'
@@ -104,7 +104,7 @@ module.exports = (conf) ->
 
     unbind = (qname) ->
         def = Q.defer()
-        conn.then (mq) ->
+        conn?.then? (mq) ->
             return def.resolve true if mq.local
             qp = mq._ttQueues[qname]
             return def.resolve mq unless qp
