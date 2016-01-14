@@ -101,18 +101,18 @@ describe 'AmqpClient', ->
             amqp.exchange = (name, opts, cb) ->
                 return exEvents
             setTimeout (-> exEvents.emit 'error', 'Error!'), 10
-            amqpc.bind('panda', 'cub', '#', ->).should.be.rejectedWith 'Error!'
+            amqpc.bind('panda', 'cub', '#').should.be.rejectedWith 'Error!'
             
         it 'should catch queue errors signalled by amqp, and reject the bind promise', ->
             amqp.queue = (name, opts, cb) ->
                 return qEvents
             setTimeout (-> qEvents.emit 'error', 'Error!'), 10
-            amqpc.bind('panda', 'cub', '#', ->).should.be.rejectedWith 'Error!'
+            amqpc.bind('panda', 'cub', '#').should.be.rejectedWith 'Error!'
     
         it 'should use the named (passive) queue when no queue name is supplied', ->
             spy amqp, 'queue'
             spy queue, 'bind'
-            amqpc.bind('panda', 'cub', '#', ->).then ->
+            amqpc.bind('panda', 'cub', '#').then ->
                 amqp.queue.should.have.been.calledWith 'cub', { passive: true }
                 queue.bind.should.have.been.calledWith exchange, '#'
 
@@ -123,3 +123,25 @@ describe 'AmqpClient', ->
                 amqp.queue.should.have.been.calledWith '', { exclusive: true }
                 queue.bind.should.have.been.calledWith exchange, '#'
         
+        it 'should subscribe the callback, if present', ->
+            cb = spy()
+            spy queue, 'subscribe'
+            amqpc.bind('panda', 'cub', '#', cb).then ->
+                queue.subscribe.should.have.been.calledWith match.object, match.func
+                cb.should.not.have.been.called
+                queue.subscribe.firstCall.args[1]()
+                cb.should.have.been.calledOnce
+                
+    describe '.unbind()', ->
+
+        it 'should unbind the underlying queue', ->
+            amqpc.queue('cub').then (q) ->
+                spy q, 'unbind'
+                amqpc.unbind('cub').then ->
+                    q.unbind.should.have.been.calledOnce
+
+        it 'should unsubscribe the underlying queue', ->
+            amqpc.queue('cub').then (q) ->
+                spy q, 'unsubscribe'
+                amqpc.unbind('cub').then ->
+                    q.unsubscribe.should.have.been.calledOnce

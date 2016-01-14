@@ -86,8 +86,7 @@ module.exports = (conf) ->
             Q.fcall ->
                 q.bind ex, topic
             .then (q) ->
-                if callback?
-                    q.subscribe callback
+                q.subscribe callback if callback?
             .then ->
                 def.resolve q.name
         .fail (err) ->
@@ -131,10 +130,4 @@ module.exports = (conf) ->
         .done()
         def.promise
 
-    return _self = {
-        exchange: exchange
-        queue: queue
-        bind: bind
-        shutdown: shutdown
-        local: local
-    }
+    return _self = { exchange, queue, bind, unbind, shutdown, local }
