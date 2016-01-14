@@ -81,21 +81,15 @@ module.exports = (conf) ->
             topic = q
             q = ''
         q = '' if not q
-        def = Q.defer()
         (Q.all [(exchange ex), (queue q)]).spread (ex, q) ->
             Q.fcall ->
                 q.bind ex, topic
             .then (q) ->
                 q.subscribe callback if callback?
             .then ->
-                def.resolve q.name
-        .fail (err) ->
-            def.reject err
-        .done()
-        def.promise
+                return q.name
 
     unbind = (qname) ->
-        def = Q.defer()
         conn?.then? (mq) ->
             return def.resolve true if mq.local
             qp = mq._ttQueues[qname]
@@ -106,13 +100,8 @@ module.exports = (conf) ->
         .then (q) ->
             q.unsubscribe()
         .then ->
-            def.resolve qname
-        .fail (err) ->
-            def.reject err
-        .done()
-        def.promise
+            return qname
 
-    shutdownDef = null
     shutdown = ->
         return isShutdown.promise if isShutdown
         def = isShutdown = Q.defer()
@@ -127,6 +116,8 @@ module.exports = (conf) ->
                 mq.end()
                 log.info 'amqp closed'
                 def.resolve true
+            .catch (err) ->
+                def.reject err
         .done()
         def.promise
 
