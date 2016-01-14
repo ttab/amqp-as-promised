@@ -23,15 +23,8 @@ module.exports = (conf) ->
             log.info 'amqp connection ready'
             def.resolve mq
         mq.on 'error', (err) ->
-            if def.promise.isPending()
-                def.reject err
-                # disable reconnects (a bit of a hack)
-                mq.backoff = mq.reconnect = -> false
-                log.warn 'amqp connection failed:', err
-            else if def.promise.isFulfilled()
-                unless isShutdown
-                    log.warn 'amqp error:',
-                        (if err.message then err.message else err)
+            unless isShutdown
+                log.warn 'amqp error:', (if err.message then err.message else err)
         def.promise
 
     exchange = (name, opts) ->
@@ -132,8 +125,6 @@ module.exports = (conf) ->
             Q.all(todo)
             .then ->
                 log.info 'closing amqp connection'
-                # compensate for utterly broken reconnect code
-                mq.backoff = mq.reconnect = mq.connect = -> false
                 mq.end()
                 log.info 'amqp closed'
                 def.resolve true
