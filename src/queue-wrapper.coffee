@@ -52,6 +52,8 @@ module.exports = class QueueWrapper
         opts = opts ? {ack: false, prefetchCount: 1}
         throw new Error('Opts is not an object') unless opts or typeof opts != 'object'
         throw new Error('Callback is not a function') unless callb or typeof callb != 'function'
+        if !!opts.ack and opts.prefetchCount > 1
+            @noshifting = true
         @unsubscribe().then =>
             wrapper = =>
                 try
@@ -83,4 +85,7 @@ module.exports = class QueueWrapper
     isAutoDelete: => @queue.options.autoDelete
 
     shift: =>
+        if @noshifting
+            throw new Error("ack:true and prefetchCount > 1 does not
+                work with queue.shift(). use (msg, info, del, ack) => ack.acknowledge()")
         @queue.shift.apply @queue, arguments
