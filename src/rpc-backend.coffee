@@ -9,7 +9,7 @@ doack = (opts, ack) -> (cb) ->
     if opts?.ack
         Q().then ->
             cb()
-        .finally -> ack()
+        .finally -> ack.acknowledge()
     else
         cb()
 

@@ -195,15 +195,15 @@ describe 'RpcBackend', ->
             handler = stub().returns Q.fcall -> 'retval'
             rpc = new RpcBackend {}
             callback = rpc._mkcallback exchange, handler, {ack:true}
-            ack = spy (reject, requeue) ->
+            ack = acknowledge: spy (reject, requeue) ->
 
         it 'should ack values that handles successfully', ->
             callback 'msg', { hello: 'world' }, { correlationId: '1234', replyTo: 'reply'}, ack
             .then ->
                 exchange.publish.should.have.been.calledWith 'reply',
                     'retval', match.object
-                ack.should.have.been.calledOnce
-                ack.args[0].should.eql []
+                ack.acknowledge.should.have.been.calledOnce
+                ack.acknowledge.args[0].should.eql []
 
 
         it 'should ack values that has no promise return', ->
@@ -213,8 +213,8 @@ describe 'RpcBackend', ->
             .then ->
                 exchange.publish.should.have.been.calledWith 'reply',
                     'retval', match.object
-                ack.should.have.been.calledOnce
-                ack.args[0].should.eql []
+                ack.acknowledge.should.have.been.calledOnce
+                ack.acknowledge.args[0].should.eql []
 
 
         it 'should ack values that handles unsuccessfully', ->
@@ -222,8 +222,8 @@ describe 'RpcBackend', ->
             callback 'msg', { hello: 'world' }, { correlationId: '1234', replyTo: 'reply'}, ack
             .then ->
                 exchange.publish.should.have.been.calledWith 'reply', { error: 'error msg'}, match.object
-                ack.should.have.been.calledOnce
-                ack.args[0].should.eql []
+                ack.acknowledge.should.have.been.calledOnce
+                ack.acknowledge.args[0].should.eql []
 
         it 'should ack values that throws', ->
             handler = -> throw 'error msg'
@@ -231,5 +231,5 @@ describe 'RpcBackend', ->
             callback 'msg', { hello: 'world' }, { correlationId: '1234', replyTo: 'reply'}, ack
             .then ->
                 exchange.publish.should.have.been.calledWith 'reply', { error: 'error msg'}, match.object
-                ack.should.have.been.calledOnce
-                ack.args[0].should.eql []
+                ack.acknowledge.should.have.been.calledOnce
+                ack.acknowledge.args[0].should.eql []
