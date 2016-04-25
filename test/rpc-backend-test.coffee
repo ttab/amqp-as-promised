@@ -29,8 +29,9 @@ describe 'RpcBackend', ->
             amqpc.queue.should.have.been.calledWith 'hello.world', { durable: true, autoDelete: false }
         it 'should bind the exchange to the queue', ->
             qu.bind.should.have.been.calledWith ex, 'world'
+
         it 'should subscribe the callback to the request queue', ->
-            qu.subscribe.should.have.been.calledWith match.func
+            qu.subscribe.should.have.been.calledWith match.object, match.func
 
     describe '._mkcallback()', ->
         exchange = handler = rpc = callback = undefined
@@ -184,3 +185,51 @@ describe 'RpcBackend', ->
                 [buf, headers] = handler.args[0]
                 buf.toString().should.eql 'panda'
                 expect(headers?.compress).to.eql 'buffer'
+
+
+    describe '._mkcallback() in ack mode', ->
+
+        exchange = handler = rpc = callback = ack = undefined
+        beforeEach ->
+            exchange = { publish: stub() }
+            handler = stub().returns Q.fcall -> 'retval'
+            rpc = new RpcBackend {}
+            callback = rpc._mkcallback exchange, handler, {ack:true}
+            ack = spy (reject, requeue) ->
+
+        it 'should ack values that handles successfully', ->
+            callback 'msg', { hello: 'world' }, { correlationId: '1234', replyTo: 'reply'}, ack
+            .then ->
+                exchange.publish.should.have.been.calledWith 'reply',
+                    'retval', match.object
+                ack.should.have.been.calledOnce
+                ack.args[0].should.eql []
+
+
+        it 'should ack values that has no promise return', ->
+            handler = -> 'retval'
+            callback = rpc._mkcallback exchange, handler, {ack:true}
+            callback 'msg', { hello: 'world' }, { correlationId: '1234', replyTo: 'reply'}, ack
+            .then ->
+                exchange.publish.should.have.been.calledWith 'reply',
+                    'retval', match.object
+                ack.should.have.been.calledOnce
+                ack.args[0].should.eql []
+
+
+        it 'should ack values that handles unsuccessfully', ->
+            handler.returns Q.fcall -> throw new Error('error msg')
+            callback 'msg', { hello: 'world' }, { correlationId: '1234', replyTo: 'reply'}, ack
+            .then ->
+                exchange.publish.should.have.been.calledWith 'reply', { error: 'error msg'}, match.object
+                ack.should.have.been.calledOnce
+                ack.args[0].should.eql []
+
+        it 'should ack values that throws', ->
+            handler = -> throw 'error msg'
+            callback = rpc._mkcallback exchange, handler, {ack:true}
+            callback 'msg', { hello: 'world' }, { correlationId: '1234', replyTo: 'reply'}, ack
+            .then ->
+                exchange.publish.should.have.been.calledWith 'reply', { error: 'error msg'}, match.object
+                ack.should.have.been.calledOnce
+                ack.args[0].should.eql []

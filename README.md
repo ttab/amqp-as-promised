@@ -174,6 +174,18 @@ If an exception is thrown by the handler, it will be propagated back
 to the client as an object with a `error` property containing the
 error message.
 
+### Serve with prefetchCount/ack
+
+To rate limit the rpc calls to 5 concurrent, we use an options object
+to set {ack:true, prefetchCount:5}.
+
+Notice that the message acking is handled by the rpc backend wrapper.
+
+```coffee
+amqpc.serve 'myexchange', 'mytopic.#', {ack:true, prefetchCount:5}, (msg, headers, del) ->
+    return { result: 'ok' }
+```
+
 ## Shutting down
 
 ```coffee

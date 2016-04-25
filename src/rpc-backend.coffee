@@ -3,21 +3,36 @@ Q     = require 'q'
 merge = require './merge'
 {compress, decompress} = require './compressor'
 
+# only ack if we actually are in ack mode, otherwise business as usual
+# to be backwards compatible.
+doack = (opts, ack) -> (cb) ->
+    if opts?.ack
+        Q().then ->
+            cb()
+        .finally -> ack()
+    else
+        cb()
+
 module.exports = class RpcBackend
     constructor: (@amqpc) ->
 
-    serve: (exname, topic, callback) =>
+    serve: (exname, topic, opts, callback) =>
+        # backwards compatible with 3 args
+        if typeof opts == 'function'
+            callback = opts
+            opts = null
+        opts = opts ? {}
         Q.all( [
             @amqpc.exchange exname, { type: 'topic', durable: true, autoDelete: false}
             @amqpc.exchange ''
             @amqpc.queue "#{exname}.#{topic}", { durable: true, autoDelete: false }
         ]).spread (ex, defaultex, queue) =>
             queue.bind ex, topic
-            queue.subscribe @_mkcallback(defaultex, callback)
+            queue.subscribe opts, @_mkcallback(defaultex, callback, opts)
 
     # Creates a callback funtion which respects replyTo/correlationId
-    _mkcallback: (exchange, handler) ->
-        (msg, headers, info) ->
+    _mkcallback: (exchange, handler, opts) ->
+        (msg, headers, info, ack) -> doack(opts, ack) ->
             # no replyTo, no rpc
             return unless info.replyTo?
             # in amqp info is bogus since it got seconds as resolution
@@ -74,7 +89,7 @@ module.exports = class RpcBackend
                     exchange.publish info.replyTo, res, opts
             .fail (err) ->
                 log.error err
-                exchange.publish info.replyTo, { error: err.message }, opts
+                exchange.publish info.replyTo, { error: err.message ? err }, opts
             .fail (err) ->
                 # we need to be careful to catch any errors caused by
                 # the publish call in the error handling
