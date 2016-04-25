@@ -177,7 +177,7 @@ error message.
 ### Serve with prefetchCount/ack
 
 To rate limit the rpc calls to 5 concurrent, we use an options object
-to set {ack:true, prefetchCount:5}.
+to set `{ack:true, prefetchCount:5}`.
 
 Notice that the message acking is handled by the rpc backend wrapper.
 
