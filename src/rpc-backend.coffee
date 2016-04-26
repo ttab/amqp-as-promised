@@ -31,8 +31,8 @@ module.exports = class RpcBackend
             queue.subscribe opts, @_mkcallback(defaultex, callback, opts)
 
     # Creates a callback funtion which respects replyTo/correlationId
-    _mkcallback: (exchange, handler, opts) ->
-        (msg, headers, info, ack) -> doack(opts, ack) ->
+    _mkcallback: (exchange, handler, subopts) ->
+        (msg, headers, info, ack) -> doack(subopts, ack) ->
             # no replyTo, no rpc
             return unless info.replyTo?
             # in amqp info is bogus since it got seconds as resolution
