@@ -123,7 +123,7 @@ describe 'Rpc', ->
                 buf = gzipSync Buffer('so wrong') # this is not valid json
                 rpc.resolveResponse '1234', buf, compress:'json'
                 def.promise.fail (err) ->
-                    err.toString().should.eql 'SyntaxError: Unexpected token s'
+                    err.toString()[0...31].should.eql 'SyntaxError: Unexpected token s'
 
         describe 'with a compress:buffer header', ->
 

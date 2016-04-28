@@ -61,4 +61,4 @@ describe 'compressor', ->
             p = gzipSync Buffer('not correct json')
             wdecomp p, {compress:'json'}
             .fail (err) ->
-                err.toString().should.eql 'SyntaxError: Unexpected token o'
+                err.toString()[0...31].should.eql 'SyntaxError: Unexpected token o'
