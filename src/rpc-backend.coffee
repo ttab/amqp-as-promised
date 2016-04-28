@@ -9,7 +9,11 @@ doack = (opts, ack) -> (cb) ->
     if opts?.ack
         Q().then ->
             cb()
-        .finally -> ack.acknowledge()
+        .then ->
+            ack.acknowledge(false)       # accept
+        .catch ->
+            ack.acknowledge(true, false) # reject, no requeue
+            # deliberately not rethrow
     else
         cb()
 
@@ -87,10 +91,11 @@ module.exports = class RpcBackend
                 .then ->
                     # then send the result
                     exchange.publish info.replyTo, res, opts
-            .fail (err) ->
+            .catch (err) ->
                 log.error err
-                exchange.publish info.replyTo, { error: err.message ? err }, opts
-            .fail (err) ->
-                # we need to be careful to catch any errors caused by
-                # the publish call in the error handling
-                log.error err
+                Q().then ->
+                    exchange.publish(info.replyTo, { error: err.message ? err }, opts)
+                .then ->
+                    throw err if subopts?.ack # let ack see error
+                .catch (perr) ->
+                    throw perr if subopts?.ack # let ack see publish error
