@@ -54,11 +54,11 @@ describe 'compressor', ->
         it 'fails on bad decompressions', ->
             p = Buffer('not correct gzip')
             wdecomp p, {compress:'buffer'}
-            .fail (err) ->
+            .catch (err) ->
                 err.toString().should.eql 'Error: incorrect header check'
 
         it 'fails on bad JSON deserialization', ->
             p = gzipSync Buffer('not correct json')
             wdecomp p, {compress:'json'}
-            .fail (err) ->
+            .catch (err) ->
                 err.toString()[0...31].should.eql 'SyntaxError: Unexpected token o'

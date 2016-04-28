@@ -40,7 +40,7 @@ module.exports = class Rpc
                 else
                     @responses.remove corrId
                     response.def.resolve payload
-            .fail (err) ->
+            .catch (err) ->
                 response.def.reject err
 
     rpc: (exchange, routingKey, msg, headers, options) =>
