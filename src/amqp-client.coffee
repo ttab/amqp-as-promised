@@ -25,6 +25,10 @@ module.exports = (conf) ->
         mq.on 'error', (err) ->
             unless isShutdown
                 log.warn 'amqp error:', (if err.message then err.message else err)
+                if typeof conf?.errorHandler == 'function'
+                    conf.errorHandler(err)
+                else
+                    throw err # make sure process crashes
         def.promise
 
     exchange = (name, opts) ->

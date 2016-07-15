@@ -23,15 +23,34 @@ describe 'AmqpClient', ->
             cb exchange
             return exEvents
         nodeAmqp = { createConnection: stub().returns amqp }
-        amqpClient = proxyquire '../src/amqp-client', 
+        amqpClient = proxyquire '../src/amqp-client',
             'amqp': nodeAmqp
-        amqpc = amqpClient { connection: url: 'url' }
+        amqpc = amqpClient { connection:url:'url' }
         amqp.emit 'ready'
 
     describe 'conn', ->
         it 'should invoke amqp.createConnection with the connection parameters', ->
             amqpc.exchange('panda').then ->
                 nodeAmqp.createConnection.should.have.been.calledWith { url: 'url' }
+
+    describe 'connection error', ->
+
+        it 'should crash the process', -> amqpc.exchange('panda').then ->
+            expect ->
+                amqp.emit 'error', new Error("failed badly")
+            .to.throw 'failed badly'
+
+        it 'notifies a conf.errorHandler if configured', ->
+            handler = spy ->
+            amqp = new EventEmitter
+            nodeAmqp = { createConnection: stub().returns amqp }
+            amqpClient = proxyquire '../src/amqp-client',
+                'amqp': nodeAmqp
+            amqpc = amqpClient { connection:{url:'url'}, errorHandler:handler }
+            amqp.emit 'ready'
+            handler.should.not.have.been.calledOnce
+            amqp.emit 'error', new Error("failed badly")
+            handler.should.have.been.calledOnce
 
     describe '.queue()', ->
         beforeEach ->

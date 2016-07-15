@@ -60,6 +60,13 @@ If true, means there will be no AMQP connection. Default: false
 * `logLevel`: sets the log level. Defaults to `INFO`. Possible levels
   are `DEBUG`, `INFO`, `WARN`, `ERROR`
 
+### `errorHandler`
+
+*Since 2.0* connection errors are rethrown to crash process.
+
+* `errorHandler`: sets a handler function to receive the error instead of
+throwing to process.
+
 ## Example config
 
     {
