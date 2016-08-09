@@ -25,7 +25,7 @@
     "q": "~1.4.1",
     "amqp": "0.2.4",
     "uuid": "~2.0.1",
-    "bog": "1.0.0",
+    "bog": "1",
     "mem-cache": "0.0.4"
   },
   "devDependencies": {
