@@ -55,7 +55,7 @@ module.exports = class QueueWrapper
         if !!opts.ack and opts.prefetchCount > 1
             @noshifting = true
         @unsubscribe().then =>
-            wrapper = =>
+            wrapper = ->
                 try
                     callb.apply null, arguments
                 catch err
@@ -65,6 +65,8 @@ module.exports = class QueueWrapper
                 @_ctag = ctag
                 log.info 'subscribed:', @name, ctag
                 def.resolve this
+            .addErrback (err) ->
+                def.reject err
         .done()
         def.promise
 
@@ -75,9 +77,11 @@ module.exports = class QueueWrapper
             return def.promise
         ctag = @_ctag
         delete @_ctag
-        @queue.unsubscribe ctag
-        log.info 'unsubscribed:', @name, ctag
-        def.resolve this
+        (@queue.unsubscribe ctag).addCallback =>
+            log.info 'unsubscribed:', @name, ctag
+            def.resolve this
+        .addErrback (err) ->
+            def.reject err
         def.promise
 
     isDurable: => @queue.options.durable
