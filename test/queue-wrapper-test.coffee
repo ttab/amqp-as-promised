@@ -52,35 +52,38 @@ describe 'QueueWrapper', ->
             .done()
 
     it 'should take its name from the underlying queue and update it when it changes', ->
-            queue = new EventEmitter
-            queue.name = 'panda'
-            amqpc = amqpClient { local: true }
-            wrapper = new QueueWrapper {}, queue
-            wrapper.name.should.equal 'panda'
-            queue.emit 'open', 'cub'
-            wrapper.name.should.equal 'cub'
+        queue = new EventEmitter
+        queue.name = 'panda'
+        amqpc = amqpClient { local: true }
+        wrapper = new QueueWrapper {}, queue
+        wrapper.name.should.equal 'panda'
+        queue.emit 'open', 'cub'
+        wrapper.name.should.equal 'cub'
 
     it 'should refuse to do ack:true prefetchCount > 1 and shift()', ->
-            conn = {}
-            queue = { on: -> }
-            amqpc = amqpClient { local: true }
-            queue.subscribe = stub().returns { addCallback: (fn) -> fn( { consumerTag: 'tag' }) }
-            wrapper = new QueueWrapper conn, queue
-            wrapper.unsubscribe = stub().returns Q {}
-
-            wrapper.subscribe({ack:true, prefetchCount:2}, ->).then ->
-                expect(->wrapper.shift()).to.throw 'ack:true and prefetchCount > 1 does not work with queue.shift(). use (msg, info, del, ack) => ack.acknowledge()'
+        conn = {}
+        queue = { on: -> }
+        amqpc = amqpClient { local: true }
+        queue.subscribe = stub().returns self =
+            addCallback: (fn) -> fn( { consumerTag: 'tag' }) ; self
+            addErrback: -> self
+        wrapper = new QueueWrapper conn, queue
+        wrapper.unsubscribe = stub().returns Q {}
+        wrapper.subscribe({ack:true, prefetchCount:2}, ->).then ->
+            expect(->wrapper.shift()).to.throw 'ack:true and prefetchCount > 1 does not work with queue.shift(). use (msg, info, del, ack) => ack.acknowledge()'
 
     it 'should be ok with ack:true prefetchCount == 1 and shift()', ->
-            conn = {}
-            queue = {
-                on:->
-                shift:->
-            }
-            amqpc = amqpClient { local: true }
-            queue.subscribe = stub().returns { addCallback: (fn) -> fn( { consumerTag: 'tag' }) }
-            wrapper = new QueueWrapper conn, queue
-            wrapper.unsubscribe = stub().returns Q {}
+        conn = {}
+        queue = {
+            on:->
+            shift:->
+        }
+        amqpc = amqpClient { local: true }
+        queue.subscribe = stub().returns self =
+            addCallback: (fn) -> fn( { consumerTag: 'tag' }) ; self
+            addErrback: -> self
+        wrapper = new QueueWrapper conn, queue
+        wrapper.unsubscribe = stub().returns Q {}
 
-            wrapper.subscribe({ack:true, prefetchCount:1}, ->).then ->
-                expect(->wrapper.shift()).to.not.throw
+        wrapper.subscribe({ack:true, prefetchCount:1}, ->).then ->
+            expect(->wrapper.shift()).to.not.throw
