@@ -1,5 +1,4 @@
 log   = require 'bog'
-Q     = require 'q'
 merge = require './merge'
 {compress, decompress} = require './compressor'
 
@@ -7,7 +6,7 @@ merge = require './merge'
 # to be backwards compatible.
 doack = (opts, ack) -> (cb) ->
     if opts?.ack
-        Q().then ->
+        Promise.resolve().then ->
             cb()
         .then ->
             ack.acknowledge(false)       # accept
@@ -18,7 +17,7 @@ doack = (opts, ack) -> (cb) ->
         cb()
 
 module.exports = class RpcBackend
-    constructor: (@amqpc) ->
+    constructor: (@client) ->
 
     serve: (exname, topic, opts, callback) =>
         # backwards compatible with 3 args
@@ -26,11 +25,11 @@ module.exports = class RpcBackend
             callback = opts
             opts = null
         opts = opts ? {}
-        Q.all( [
-            @amqpc.exchange exname, { type: 'topic', durable: true, autoDelete: false}
-            @amqpc.exchange ''
-            @amqpc.queue "#{exname}.#{topic}", { durable: true, autoDelete: false }
-        ]).spread (ex, defaultex, queue) =>
+        Promise.all( [
+            @client.exchange exname, { type: 'topic', durable: true, autoDelete: false}
+            @client.exchange ''
+            @client.queue "#{exname}.#{topic}", { durable: true, autoDelete: false }
+        ]).then ([ex, defaultex, queue]) =>
             queue.bind ex, topic
             queue.subscribe opts, @_mkcallback(defaultex, callback, opts)
 
@@ -59,41 +58,22 @@ module.exports = class RpcBackend
             opts = {}
             opts.correlationId = info.correlationId if info.correlationId?
 
-            # we need to keep track of our queued progress messages
-            progress = []
-
             # maybe decompress compressed payload
             [ct, p] = decompress msg, headers
             merge info, ct
 
             p.then (payload) ->
-                Q.when handler payload, headers, info, (prgs) ->
-                    return unless info.correlationId
-                    popts =
-                        correlationId: info.correlationId + "#x-progress:" + progress.length
-                    [h, p] = compress prgs, headers
-                    popts.headers = h if h
-                    prev = progress[progress.length - 1] ? Q() # previous
-                    # progress wait for previous and payload
-                    # compressions this is because we could end up in
-                    # out-of-order x-progress if we first do a very
-                    # large (compressed) payload followed by a very
-                    # small one.
-                    progress.push Q.all([prev, p]).spread (_, payload) ->
-                        exchange.publish info.replyTo, payload, popts
+                Promise.resolve handler payload, headers, info
             .then (res) ->
                 [h, p] = compress res, headers
                 opts.headers = h if h
                 return p
             .then (res) ->
-                # first, wait for queued progress messages to be sent
-                Q.all progress
-                .then ->
-                    # then send the result
-                    exchange.publish info.replyTo, res, opts
+                # then send the result
+                exchange.publish info.replyTo, res, opts
             .catch (err) ->
                 log.error err
-                Q().then ->
+                Promise.resolve().then ->
                     exchange.publish(info.replyTo, { error: err.message ? err }, opts)
                 .then ->
                     throw err if subopts?.ack # let ack see error

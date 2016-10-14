@@ -1,19 +1,18 @@
-Q = require 'q'
+# Q = require 'q'
 
 module.exports = class ExchangeWrapper
 
-    constructor: (@exchange) ->
-        @name = @exchange.name
+    constructor: (@client, @exchange) ->
+        @name = @exchange.exchange
 
-    publish: (routingKey, message, options) ->
-        def = Q.defer()
-        unless @exchange.options?.confirm
-            @exchange.publish routingKey, message, options
-            def.resolve()
-        else
-            @exchange.publish routingKey, message, options, (err) ->
-                if err
-                    def.reject err
-                else
-                    def.resolve()
-        def.promise
+    _publish: (routingKey, message, options={}) =>
+        options = @client.compat.publishOpts(options)
+        options.contentType = 'application/octet-stream' unless options.contentType
+        if typeof(message) is 'object' and not (message instanceof Buffer)
+            message = new Buffer JSON.stringify message
+            options.contentType = 'application/json'
+        @client.channel.then (c) =>
+            c.publish @name, routingKey, message, options
+
+    publish: (routingKey, message, options) =>
+        @client.compat.promise(@_publish routingKey, message, options)

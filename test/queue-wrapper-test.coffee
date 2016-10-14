@@ -1,89 +1,153 @@
 {EventEmitter}  = require 'events'
-Q               = require 'q'
 ExchangeWrapper = require '../src/exchange-wrapper'
 QueueWrapper    = require '../src/queue-wrapper'
 
-amqpc = amqpClient = nodeAmqp = undefined
-
 describe 'QueueWrapper', ->
 
+    client = channel = queue = _queue = exchange = undefined
     beforeEach ->
-        nodeAmqp = {}
-        amqpClient = proxyquire '../src/amqp-client',
-            'node-amqp': nodeAmqp
+        exchange = name: 'my-exchange'
+        channel =
+            consume: stub().returns Promise.resolve { consumerTag: '1234' }
+            prefetch: stub().returns Promise.resolve()
+            cancel: stub().returns Promise.resolve()
+            bindQueue: stub().returns Promise.resolve()
+            unbindQueue: stub().returns Promise.resolve()
+        client =
+            channel: Promise.resolve(channel)
+            compat: require '../src/compat-node-amqp'
+            exchange: stub().returns Promise.resolve exchange
+        _queue = { queue: 'pandas' }
+        queue = new QueueWrapper client, _queue
+        spy queue, 'bind'
 
-    describe '.bind()', ->
-        exchange = queue = wrapper = undefined
-        beforeEach ->
-            queue = new EventEmitter
-            queue.bind = -> queue.emit 'queueBindOk'
-            spy queue, 'bind'
-            exchange = new ExchangeWrapper name:'my-exchange'
-            amqpc = exchange: -> Q exchange
-            wrapper = new QueueWrapper amqpc, queue
-
-        it 'should accept the name of an exchange as arg', ->
-            wrapper.bind('my-exchange', 'routing.key').then ->
-                queue.bind.should.have.been.calledWith match({name: 'my-exchange'}), 'routing.key'
-
-        it 'should accept an exchange object as arg', ->
-            wrapper.bind(exchange, 'routing.key').then ->
-                queue.bind.should.have.been.calledWith match({name: 'my-exchange'}), 'routing.key'
-
-        it 'should signal an error if no topic is given', ->
-            wrapper.bind('my-exchange').should.be.rejectedWith 'Topic is not a string'
-
-        it 'should signal an error if topic is not a string', ->
-            wrapper.bind('my-exchange', {}).should.be.rejectedWith 'Topic is not a string'
+    it 'should take its name from the underlying queue', ->
+        queue.name.should.equal 'pandas'
 
     describe '.subscribe()', ->
+        cb = undefined
+        beforeEach ->
+            cb = spy()
 
-        it 'should pass options to .subscribe() on to the wrapped queue', (done) ->
-            conn = {}
-            queue = { on: -> }
-            amqpc = amqpClient { local: true }
-            queue.subscribe = stub().returns { addCallback: (fn) -> fn( { consumerTag: 'tag' }) }
-            wrapper = new QueueWrapper conn, queue
-            wrapper.unsubscribe = stub().returns Q {}
+        it 'should unsubscribe before subscribing', ->
+            spy queue, 'unsubscribe'
+            queue.subscribe {}, cb
+            .then ->
+                queue.unsubscribe.should.have.been.called
 
-            wrapper.subscribe({panda: true}, ->).then ->
-                queue.subscribe.should.have.been.calledWith({panda: true}, match.func)
-                done()
-            .done()
+        it 'should return a reference to itself', ->
+            queue.subscribe {}, cb
+            .should.eventually.equal queue
 
-    it 'should take its name from the underlying queue and update it when it changes', ->
-        queue = new EventEmitter
-        queue.name = 'panda'
-        amqpc = amqpClient { local: true }
-        wrapper = new QueueWrapper {}, queue
-        wrapper.name.should.equal 'panda'
-        queue.emit 'open', 'cub'
-        wrapper.name.should.equal 'cub'
+        it 'should set prefetch before subscribing', ->
+            queue.subscribe { prefetchCount: 23 }, cb
+            .then ->
+                channel.prefetch.should.have.been.calledWith 23
+                channel.prefetch.should.have.been.calledBefore channel.consume
 
-    it 'should refuse to do ack:true prefetchCount > 1 and shift()', ->
-        conn = {}
-        queue = { on: -> }
-        amqpc = amqpClient { local: true }
-        queue.subscribe = stub().returns self =
-            addCallback: (fn) -> fn( { consumerTag: 'tag' }) ; self
-            addErrback: -> self
-        wrapper = new QueueWrapper conn, queue
-        wrapper.unsubscribe = stub().returns Q {}
-        wrapper.subscribe({ack:true, prefetchCount:2}, ->).then ->
-            expect(->wrapper.shift()).to.throw 'ack:true and prefetchCount > 1 does not work with queue.shift(). use (msg, info, del, ack) => ack.acknowledge()'
+        it 'should assume prefetch=1', ->
+            queue.subscribe { }, cb
+            .then ->
+                channel.prefetch.should.have.been.calledWith 1
 
-    it 'should be ok with ack:true prefetchCount == 1 and shift()', ->
-        conn = {}
-        queue = {
-            on:->
-            shift:->
-        }
-        amqpc = amqpClient { local: true }
-        queue.subscribe = stub().returns self =
-            addCallback: (fn) -> fn( { consumerTag: 'tag' }) ; self
-            addErrback: -> self
-        wrapper = new QueueWrapper conn, queue
-        wrapper.unsubscribe = stub().returns Q {}
+        it 'should be possible so set prefetch=0', ->
+            queue.subscribe { prefetchCount: 0 }, cb
+            .then ->
+                channel.prefetch.should.have.been.calledWith 0
 
-        wrapper.subscribe({ack:true, prefetchCount:1}, ->).then ->
-            expect(->wrapper.shift()).to.not.throw
+        it 'should pass on <msg>, <headers>, <info>, <ack> to the callback', ->
+            queue.subscribe {}, cb
+            .then ->
+                channel.consume.should.have.been.calledWith 'pandas', match.func
+                channel.consume.firstCall.args[1] {
+                    properties:
+                        headers: { 'x-panda': true }
+                        contentType: 'application/octet-stream'
+                    fields:
+                        routingKey: 'cub'
+                    content: new Buffer('{"panda": true}')
+                }
+                cb.should.have.been.calledWith match.instanceOf(Buffer),
+                    { 'x-panda': true },
+                    match { routingKey: 'cub', contentType: 'application/octet-stream' },
+                    match acknowledge: match.func
+
+        it 'should deserialize json payloads', ->
+            queue.subscribe {}, cb
+            .then ->
+                channel.consume.should.have.been.calledWith 'pandas', match.func
+                channel.consume.firstCall.args[1] {
+                    properties:
+                        contentType: 'application/json'
+                    fields: {}
+                    content: new Buffer('{"panda": true}')
+                }
+                cb.should.have.been.calledWith { panda: true }, {},
+                    match { contentType: 'application/json' }
+
+        it 'should pass options to .subscribe() on to the wrapped queue', ->
+            queue.subscribe({exclusive: true}, ->)
+            .then ->
+                channel.consume.should.have.been.calledWith('pandas', match.func, {noAck: true, exclusive: true, prefetch: 1})
+
+    describe '.unsubscribe()', ->
+
+        it 'should unsubscribe a previously subscribed handler', ->
+            queue.subscribe(->)
+            .then ->
+                channel.consume.should.have.been.calledWith 'pandas', match.func
+                queue._consumerTag.should.equal '1234'
+                queue.unsubscribe().should.eventually.equal queue
+                .then ->
+                    channel.cancel.should.have.been.calledWith '1234'
+                    expect(queue._consumerTag).to.be.undefined
+
+        it 'should just return if it was already unsubscribed', ->
+            queue.unsubscribe().should.eventually.equal queue
+            .then ->
+                channel.cancel.should.not.have.been.called
+                expect(queue._consumerTag).to.be.undefined
+
+    describe '.bind()', ->
+
+        it 'should unbind before binding', ->
+            spy queue, 'unbind'
+            queue.bind('my-exchange', 'routing.key').then ->
+                queue.unbind.should.have.been.called
+
+        it 'should accept the name of an exchange as arg', ->
+            queue.bind('my-exchange', 'routing.key').then ->
+                channel.bindQueue.should.have.been.calledWith 'pandas', 'my-exchange', 'routing.key'
+
+        it 'should accept an exchange object as arg', ->
+            queue.bind(exchange, 'routing.key').then ->
+                channel.bindQueue.should.have.been.calledWith 'pandas', 'my-exchange', 'routing.key'
+
+        it.skip 'should signal an error if no topic is given', ->
+            queue.bind('my-exchange').should.be.rejectedWith 'Topic is not a string'
+
+        it 'should signal an error if topic is not a string', ->
+            queue.bind('my-exchange', {}).should.be.rejectedWith 'Topic is not a string'
+
+        it 'should return a promise for @', ->
+            queue.bind(exchange, 'routing.key').should.eventually.equal queue
+
+
+    describe '.unbind()', ->
+
+        it 'should unbind a previously bound queue', ->
+            queue.bind('my-exchange', '#').then ->
+                queue._exchange.should.equal 'my-exchange'
+                queue._topic.should.equal '#'
+                queue.unbind().should.eventually.equal queue
+                .then ->
+                    channel.unbindQueue.should.have.been.calledWith 'pandas', 'my-exchange', '#'
+                    expect(queue._exchange).to.be.undefined
+                    expect(queue._topic).to.be.undefined
+
+        it 'should just return if it was not already bound', ->
+            queue.unbind().should.eventually.equal queue
+            .then ->
+                channel.unbindQueue.should.not.have.been.called
+                expect(queue._exchange).to.be.undefined
+                expect(queue._topic).to.be.undefined

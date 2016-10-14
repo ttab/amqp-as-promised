@@ -1,10 +1,9 @@
-Q    = require 'q'
 zlib = require 'zlib'
 
 plug = (rs, rj) -> (err, res) -> if err then rj(err) else rs(res)
-comp   = (buf) -> Q.Promise (rs, rj) -> zlib.gzip   buf, plug(rs, rj)
-decomp = (buf) -> Q.Promise (rs, rj) -> zlib.gunzip buf, plug(rs, rj)
-jsonp  = (str) -> Q.Promise (rs, rj) -> try rs(JSON.parse str) catch err then rj(err)
+comp   = (buf) -> new Promise (rs, rj) -> zlib.gzip   buf, plug(rs, rj)
+decomp = (buf) -> new Promise (rs, rj) -> zlib.gunzip buf, plug(rs, rj)
+jsonp  = (str) -> new Promise (rs, rj) -> try rs(JSON.parse str) catch err then rj(err)
 
 I    = (v) -> v
 
@@ -15,7 +14,7 @@ compress = (msg, props) ->
         else
             [{compress:'json'}, comp Buffer JSON.stringify msg]
     else
-        [null, Q(msg)]
+        [null, Promise.resolve(msg)]
 
 
 decompress = (msg, props) ->
@@ -26,9 +25,9 @@ decompress = (msg, props) ->
         else if props.compress == 'json'
             ['application/json', decomp(data).then (buf) -> jsonp buf.toString()]
         else
-            [null, Q(msg)]
+            [null, Promise.resolve(msg)]
     else
-        [null, Q(msg)]
+        [null, Promise.resolve(msg)]
 
 
 module.exports = {compress, decompress}

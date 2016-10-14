@@ -34,12 +34,5 @@ describe 'Index', ->
             host: 'host'
             vhost: 'vhost'
         index cfg
-        amqpc.should.have.been.calledWith { connection: { host: 'host', vhost: 'vhost' }, local: undefined }
-        Rpc.should.have.been.calledWith match.object
-
-    it 'should honor the local property of old-style config', ->
-        cfg =
-            local: true
-        index cfg
-        amqpc.should.have.been.calledWith { connection: match.object, local: true }
+        amqpc.should.have.been.calledWith { connection: { host: 'host', vhost: 'vhost' } }
         Rpc.should.have.been.calledWith match.object

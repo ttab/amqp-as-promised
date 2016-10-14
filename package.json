@@ -22,11 +22,11 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "q": "~1.4.1",
-    "amqp": "0.2.6",
-    "uuid": "~2.0.1",
+    "amqplib": "^0.4.2",
     "bog": "1",
-    "mem-cache": "0.0.4"
+    "lodash.clone": "^4.5.0",
+    "mem-cache": "0.0.4",
+    "uuid": "~2.0.1"
   },
   "devDependencies": {
     "chai": "^3.4.1",
