@@ -19,6 +19,18 @@ functions for AMQP-based RPC.
    * [RPC functions](#rpc-functions)
  * [Changelog](CHANGELOG.md)
 
+## A note on version 3.0
+
+As of version 3.0, the underlying amqp library has changed from
+`node-amqp` to `amqplib`. Efforts have been made to keep everything as
+backwards compatible as possible, but some things have changed:
+
+ * Local mode is no longer supported.
+ * `queue.shift()` is no longer supported.
+ * `Q` has been dropped in favor of native promises. As a result,
+   support for promise progress notifications over RPC is no longer
+   supported.
+
 ## Installing
 
 `npm install amqp-as-promised`

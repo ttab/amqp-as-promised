@@ -1,7 +1,16 @@
 Changelog
 =========
 
-## Unreleased
+## 3.0.0 - 2016-10-19
+
+ * The underlying amqp library has changed from `node-amqp` to
+   `amqplib`. Efforts have been made to keep everything as backwards
+   compatible as possible.
+ * Local mode is no longer supported.
+ * `queue.shift()` is no longer supported.
+ * `Q` has been dropped in favor of native promises. As a result,
+   support for promise progress notifications over RPC is no longer
+   supported.
 
 ## 0.3.0 - 2015-01-29
  * TTL is now set on RPC messages.
