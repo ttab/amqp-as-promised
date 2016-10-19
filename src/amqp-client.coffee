@@ -35,7 +35,7 @@ module.exports = class AmqpClient
                 new ExchangeWrapper @, e
 
     exchange: =>
-        [ name, type, opts ] = @compat.exchangeArgs.apply(undefined, arguments)
+        [ name, type, opts ] = @compat.exchangeArgs arguments...
         @compat.promise(@_exchange name, type, opts)
 
     _queue: (qname, opts) =>

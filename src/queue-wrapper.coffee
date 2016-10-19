@@ -7,13 +7,13 @@ module.exports = class QueueWrapper
 
     _bind: (exchange, topic) =>
         topic = '' if not topic
-        Promise.resolve().then ->
+        Promise.resolve().then =>
             throw new Error('Topic is not a string') if typeof topic != 'string'
-        .then =>
-            @unbind()
-        .then =>
-            @client.exchange(exchange)
-        .then (exchange) =>
+            Promise.all([
+                @unbind()
+                @client.exchange(exchange)
+            ])
+        .then ([whatevs, exchange]) =>
             log.info 'binding:', exchange.name, @name, topic
             @client.channel.then (c) =>
                 c.bindQueue @name, exchange.name, topic

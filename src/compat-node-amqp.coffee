@@ -19,7 +19,7 @@ module.exports =
             [ "amqp://#{conn.login}:#{conn.password}@#{conn.host}/#{conn.vhost}"]
 
     exchangeArgs: (name, opts) ->
-        if opts and Object.keys(opts).length isnt 0
+        if Object.keys(opts ? {}).length isnt 0
             type = opts.type or 'topic'
             o = {}
             o[k] = v for k, v of opts when k in [ 'durable', 'autoDelete'] and v
