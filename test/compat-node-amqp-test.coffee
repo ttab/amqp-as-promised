@@ -50,6 +50,10 @@ describe 'node-ampq compatibility', ->
 
     describe '.exchangeArgs()', ->
 
+        it 'should return just the name if passive=true', ->
+            compat.exchangeArgs('panda', { passive: true })
+            .should.deep.eql [ 'panda' ]
+
         it 'should assume durable=false if not specified', ->
             compat.exchangeArgs('panda', { autoDelete: true })
             .should.deep.eql [ 'panda', 'topic', { durable: false, autoDelete: true }]
