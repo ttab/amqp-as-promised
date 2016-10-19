@@ -1,168 +1,241 @@
-{EventEmitter}  = require 'events'
-Q               = require 'q'
-QueueWrapper    = require '../src/queue-wrapper'
-ExchangeWrapper = require '../src/exchange-wrapper'
-
-amqp = amqpc = amqpClient = nodeAmqp = queue = exchange = exEvents = qEvents = undefined
+{ EventEmitter } = require 'events'
+proxyquire       = require 'proxyquire'
+QueueWrapper     = require '../src/queue-wrapper'
+ExchangeWrapper  = require '../src/exchange-wrapper'
 
 describe 'AmqpClient', ->
 
+    AmqpClient = amqp = conn = channel = exchange = queue = undefined
     beforeEach ->
-        amqp = new EventEmitter
-        queue = new EventEmitter
-        queue.bind = -> @emit 'queueBindOk'
-        queue.subscribe = -> self =
-            addCallback: (cb) -> cb { }; self
-            addErrback: -> self
-        exEvents = new EventEmitter
-        exchange = {}
-        qEvents = new EventEmitter
-        amqp.queue = (name, obts, cb) ->
-            cb queue
-            queue.emit 'open'
-            return qEvents
-        amqp.exchange = (name, opts, cb) ->
-            cb exchange
-            return exEvents
-        nodeAmqp = { createConnection: stub().returns amqp }
-        amqpClient = proxyquire '../src/amqp-client',
-            'amqp': nodeAmqp
-        amqpc = amqpClient { connection:url:'url' }
-        amqp.emit 'ready'
+        exchange =
+            exchange: 'panda'
+        queue =
+            queue: 'pandas'
 
-    describe 'conn', ->
+        channel = new EventEmitter
+        channel.checkExchange =  stub().returns Promise.resolve exchange
+        channel.assertExchange =  stub().returns Promise.resolve exchange
+        channel.checkQueue =  stub().returns Promise.resolve queue
+        channel.assertQueue =  stub().returns Promise.resolve queue
+        channel.bindQueue =  stub().returns Promise.resolve()
+        channel.unbindQueue =  stub().returns Promise.resolve()
+        channel.consume =  stub().returns Promise.resolve { consumerTag: '1234' }
+        channel.prefetch = stub().returns Promise.resolve()
+
+        conn = new EventEmitter
+        conn.createChannel = stub().returns Promise.resolve channel
+
+        amqp =
+            connect: stub().returns Promise.resolve conn
+        AmqpClient = proxyquire '../src/amqp-client',
+            'amqplib': amqp
+
+    describe '.constructor()', ->
+
+        it 'should connect using conf.uri', ->
+            client = new AmqpClient { connection: url: 'amqp://panda' }
+            amqp.connect.should.have.been.calledWith 'amqp://panda'
+
+    describe '.exchange()', ->
+        client = undefined
+        beforeEach ->
+            client = new AmqpClient { connection: url: 'amqp://panda' }
+
+        it 'should create an exchange using the specified type', ->
+            client.exchange 'panda', { type: 'direct' }
+            .then ->
+                channel.assertExchange.should.have.been.calledWith 'panda', 'direct'
+
+        it 'should check that the exchange exists if no opts are given', ->
+            client.exchange 'panda'
+            .then (e) ->
+                channel.checkExchange.should.have.been.calledWith 'panda'
+                e.name.should.equal 'panda'
+
+        it 'should return a wrapper for the default exchange without calling channel#checkExchange', ->
+            client.exchange ''
+            .then (e) ->
+                channel.checkExchange.should.not.have.been.called
+                e.name.should.equal ''
+
+        it 'should check that the exchange exists if no type is given', ->
+            client.exchange 'panda', { }
+            .then ->
+                channel.checkExchange.should.have.been.calledWith 'panda'
+
+        describe.skip 'should set the confirm flag when creating an exchange', ->
+            it 'with explicit options', ->
+                client.exchange('panda', { type: 'topic', durable: true }).then ->
+                    channel.assertExchange.should.have.been.calledWith 'panda', { type: 'topic', durable: true, confirm: true }
+            it 'without explicit options', ->
+                client.exchange('panda').then ->
+                    channel.assertExchange.should.have.been.calledWith 'panda', { passive: true, confirm: true }
+
+        describe.skip 'should not set the confirm flag for the default exchange when creating an exchange', ->
+            it 'with explicit options', ->
+                client.exchange('', { durable: true }).then ->
+                    channel.assertExchange.should.have.been.calledWith '', { durable: true }
+            it 'without explicit options', ->
+                client.exchange('').then ->
+                    channel.assertExchange.should.have.been.calledWith '', { passive: true }
+
+        it 'should return an ExchangeWrapper', ->
+            client.exchange('panda').should.eventually.be.an.instanceof ExchangeWrapper
+
+        it 'should return the same object if passed an ExchangeWrapper as only argument', ->
+            client.exchange('panda').then (ex1) ->
+                client.exchange(ex1).then (ex2) ->
+                    expect(ex1).to.equal ex2
+
+        it 'should catch errors signalled by amqp, and reject the exchange promise', ->
+            channel.checkExchange.returns Promise.reject new Error 'Error!'
+            client.exchange('panda').should.eventually.be.rejectedWith 'Error!'
+
+    describe '.queue()', ->
+        client = undefined
+        beforeEach ->
+            client = new AmqpClient { connection: url: 'amqp://panda' }
+
+        it 'should create a queue using the opts given', ->
+            client.queue 'pandas', { durable: true }
+            .then ->
+                channel.assertQueue.should.have.been.calledWith 'pandas', durable: true
+
+        it 'should create an exclusive queue if the name is empty', ->
+            client.queue ''
+            .then ->
+                channel.assertQueue.should.have.been.calledWith '', exclusive: true
+
+        it 'should create an exclusive queue if no arguments were given', ->
+            client.queue()
+            .then ->
+                channel.assertQueue.should.have.been.calledWith '', exclusive: true
+
+        it 'should check that a queue exists if no opts are given', ->
+            client.queue 'pandas'
+            .then ->
+                channel.checkQueue.should.have.been.calledWith 'pandas'
+
+
+        it.skip 'should assume exclusive:true when called without name and opts', ->
+            client.queue().then ->
+                amqp.queue.should.have.been.calledWith '', { exclusive: true }
+
+        it.skip 'should assume passive:true when called with name but without opts', ->
+            client.queue('panda').then ->
+                amqp.queue.should.have.been.calledWith 'panda', { passive:true }
+
+        it 'should pass given name and opts on when creating the queue', ->
+            client.queue('pandas', { my: 'option' })
+            .then ->
+                channel.assertQueue.should.have.been.calledWith 'pandas', { my: 'option' }
+
+        it 'should returns a promise for a QueueWrapper', ->
+            client.queue().should.eventually.be.an.instanceof QueueWrapper
+
+        it 'should pass a reference to itself to QueueWrapper', ->
+            client.queue().then (q) ->
+                q.client.should.equal client
+
+        it 'should return the same object if passed a QueueWrapper as only argument', ->
+            client.queue('panda').then (q1) ->
+                client.queue(q1).then (q2) ->
+                    expect(q1).to.equal q2
+
+        it 'should catch errors signalled by amqp, and reject the queue promise', ->
+            channel.checkQueue.returns Promise.reject new Error 'Error!'
+            client.queue('panda').should.be.rejectedWith 'Error!'
+
+    describe '.bind()', ->
+        client = undefined
+        beforeEach ->
+            client = new AmqpClient { connection: url: 'amqp://panda' }
+            spy client, '_exchange'
+            spy client, '_queue'
+
+        it 'should create the exchange', ->
+            client.bind 'panda', 'pandas', 'cub.*'
+            .then ->
+                client._exchange.should.have.been.calledWith 'panda'
+
+        it 'should create the queue', ->
+            client.bind 'panda', 'pandas', 'cub.*'
+            .then ->
+                client._queue.should.have.been.calledWith 'pandas'
+
+        it 'should bind the queue to the exchange using the routing key', ->
+            client.bind 'panda', 'pandas', 'cub.*'
+            .then ->
+                channel.bindQueue.should.have.been.calledWith 'pandas', 'panda', 'cub.*'
+
+        it 'should declare an anonymous queue when no queue name is supplied', ->
+            client.bind('panda', '#', ->).then ->
+                channel.assertQueue.should.have.been.calledWith '', { exclusive: true }
+                channel.bindQueue.should.have.been.calledWith 'pandas', 'panda', '#'
+
+        it 'should assume an empty routing key if none is given', ->
+            client.bind 'panda', 'pandas'
+            .then ->
+                channel.bindQueue.should.have.been.calledWith 'pandas', 'panda', ''
+
+        it 'should subscribe the callback if one is given', ->
+            cb = spy()
+            client.bind 'panda', 'pandas', 'cub.*', cb
+            .then ->
+                channel.consume.should.have.been.calledWith 'pandas', match.func
+                channel.consume.firstCall.args[1]({})
+                cb.should.have.been.called
+
+        it 'should subscribe the callback if the routing key is omitted', ->
+            cb = spy()
+            client.bind 'panda', 'pandas', cb
+            .then ->
+                channel.consume.should.have.been.calledWith 'pandas', match.func
+                channel.consume.firstCall.args[1]({})
+                cb.should.have.been.called
+
+        it 'should catch exchange errors signalled by amqp, and reject the bind promise', ->
+            channel.checkExchange.returns Promise.reject new Error 'Error!'
+            client.bind('panda', 'pandas', '#').should.be.rejectedWith 'Error!'
+
+        it 'should catch queue errors signalled by amqp, and reject the bind promise', ->
+            channel.checkQueue.returns Promise.reject new Error 'Error!'
+            client.bind('panda', 'pandas', '#').should.be.rejectedWith 'Error!'
+
+    describe.skip 'conn', ->
         it 'should invoke amqp.createConnection with the connection parameters', ->
-            amqpc.exchange('panda').then ->
+            client.exchange('panda').then ->
                 nodeAmqp.createConnection.should.have.been.calledWith { url: 'url' }
 
     describe 'connection error', ->
 
-        it 'should crash the process', -> amqpc.exchange('panda').then ->
-            expect ->
-                amqp.emit 'error', new Error("failed badly")
-            .to.throw 'failed badly'
+        it 'should crash the process', ->
+            client = new AmqpClient { connection: url: 'amqp://panda' }
+            client.channel.then ->
+                expect ->
+                    conn.emit 'error', new Error("failed badly")
+                .to.throw 'failed badly'
 
         it 'notifies a conf.errorHandler if configured', ->
             handler = spy ->
-            amqp = new EventEmitter
-            nodeAmqp = { createConnection: stub().returns amqp }
-            amqpClient = proxyquire '../src/amqp-client',
-                'amqp': nodeAmqp
-            amqpc = amqpClient { connection:{url:'url'}, errorHandler:handler }
-            amqp.emit 'ready'
-            handler.should.not.have.been.calledOnce
-            amqp.emit 'error', new Error("failed badly")
-            handler.should.have.been.calledOnce
-
-    describe '.queue()', ->
-        beforeEach ->
-            spy amqp, 'queue'
-
-        it 'should assume exclusive:true when called without name and opts', ->
-            amqpc.queue().then ->
-                amqp.queue.should.have.been.calledWith '', { exclusive: true }
-        it 'should assume passive:true when called with name but without opts', ->
-            amqpc.queue('panda').then ->
-                amqp.queue.should.have.been.calledWith 'panda', { passive:true }
-        it 'should pass given name and opts on when creating the queue', ->
-            amqpc.queue('panda', { my: 'option' }).then ->
-                amqp.queue.should.have.been.calledWith 'panda', { my: 'option' }
-        it 'should returns a promise for a QueueWrapper', ->
-            amqpc.queue().should.eventually.be.an.instanceof QueueWrapper
-        it 'should pass a reference to itself to QueueWrapper', ->
-            amqpc.queue().then (q) ->
-                q.amqpc.should.equal amqpc
-        it 'should return the same object if passed a QueueWrapper as only argument', ->
-            amqpc.queue('panda').then (q1) ->
-                amqpc.queue(q1).then (q2) ->
-                    expect(q1).to.equal q2
-        it 'should catch errors signalled by amqp, and reject the queue promise', ->
-            amqp.queue = (name, opts, cb) ->
-                return qEvents
-            setTimeout (-> qEvents.emit 'error', 'Error!'), 10
-            amqpc.queue('panda').should.be.rejectedWith 'Error!'
-
-    describe '.exchange()', ->
-        beforeEach ->
-            spy amqp, 'exchange'
-
-        describe 'should set the confirm flag when creating an exchange', ->
-            it 'with explicit options', ->
-                amqpc.exchange('panda', { durable: true }).then ->
-                    amqp.exchange.should.have.been.calledWith 'panda', { durable: true, confirm: true }
-            it 'without explicit options', ->
-                amqpc.exchange('panda').then ->
-                    amqp.exchange.should.have.been.calledWith 'panda', { passive: true, confirm: true }
-
-        describe 'should not set the confirm flag for the default exchange when creating an exchange', ->
-            it 'with explicit options', ->
-                amqpc.exchange('', { durable: true }).then ->
-                    amqp.exchange.should.have.been.calledWith '', { durable: true }
-            it 'without explicit options', ->
-                amqpc.exchange('').then ->
-                    amqp.exchange.should.have.been.calledWith '', { passive: true }
-
-        it 'should return an ExchangeWrapper', ->
-            amqpc.exchange('panda').should.eventually.be.an.instanceof ExchangeWrapper
-
-        it 'should return the same object if passed an ExchangeWrapper as only argument', ->
-            amqpc.exchange('panda').then (ex1) ->
-                amqpc.exchange(ex1).then (ex2) ->
-                    expect(ex1).to.equal ex2
-
-        it 'should catch errors signalled by amqp, and reject the exchange promise', ->
-            amqp.exchange = (name, opts, cb) ->
-                return exEvents
-            setTimeout (-> exEvents.emit 'error', 'Error!'), 10
-            amqpc.exchange('panda').should.be.rejectedWith 'Error!'
-
-    describe '.bind()', ->
-
-        it 'should catch exchange errors signalled by amqp, and reject the bind promise', ->
-            amqp.exchange = (name, opts, cb) ->
-                return exEvents
-            setTimeout (-> exEvents.emit 'error', 'Error!'), 10
-            amqpc.bind('panda', 'cub', '#').should.be.rejectedWith 'Error!'
-
-        it 'should catch queue errors signalled by amqp, and reject the bind promise', ->
-            amqp.queue = (name, opts, cb) ->
-                return qEvents
-            setTimeout (-> qEvents.emit 'error', 'Error!'), 10
-            amqpc.bind('panda', 'cub', '#').should.be.rejectedWith 'Error!'
-
-        it 'should use the named (passive) queue when no queue name is supplied', ->
-            spy amqp, 'queue'
-            spy queue, 'bind'
-            amqpc.bind('panda', 'cub', '#').then ->
-                amqp.queue.should.have.been.calledWith 'cub', { passive: true }
-                queue.bind.should.have.been.calledWith exchange, '#'
-
-        it 'should declare an anonymous queue when no queue name is supplied', ->
-            spy amqp, 'queue'
-            spy queue, 'bind'
-            amqpc.bind('panda', '#', ->).then ->
-                amqp.queue.should.have.been.calledWith '', { exclusive: true }
-                queue.bind.should.have.been.calledWith exchange, '#'
-
-        it 'should subscribe the callback, if present', ->
-            cb = spy()
-            spy queue, 'subscribe'
-            amqpc.bind('panda', 'cub', '#', cb).then ->
-                queue.subscribe.should.have.been.calledWith match.object, match.func
-                cb.should.not.have.been.called
-                queue.subscribe.firstCall.args[1]()
-                cb.should.have.been.calledOnce
+            client = new AmqpClient { connection:{url:'url'}, errorHandler: handler }
+            client.channel.then ->
+                conn.emit 'error', new Error("failed badly")
+                handler.should.have.been.calledOnce
 
     describe '.unbind()', ->
+        client = undefined
+        beforeEach ->
+            client = new AmqpClient { connection: url: 'amqp://panda' }
 
         it 'should unbind the underlying queue', ->
-            amqpc.queue('cub').then (q) ->
+            client.queue('cub').then (q) ->
                 spy q, 'unbind'
-                amqpc.unbind('cub').then ->
+                client.unbind('cub').then ->
                     q.unbind.should.have.been.calledOnce
 
         it 'should unsubscribe the underlying queue', ->
-            amqpc.queue('cub').then (q) ->
+            client.queue('cub').then (q) ->
                 spy q, 'unsubscribe'
-                amqpc.unbind('cub').then ->
+                client.unbind('cub').then ->
                     q.unsubscribe.should.have.been.calledOnce

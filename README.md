@@ -19,6 +19,18 @@ functions for AMQP-based RPC.
    * [RPC functions](#rpc-functions)
  * [Changelog](CHANGELOG.md)
 
+## A note on version 3.0
+
+As of version 3.0, the underlying amqp library has changed from
+`node-amqp` to `amqplib`. Efforts have been made to keep everything as
+backwards compatible as possible, but some things have changed:
+
+ * Local mode is no longer supported.
+ * `queue.shift()` is no longer supported.
+ * `Q` has been dropped in favor of native promises. As a result,
+   support for promise progress notifications over RPC is no longer
+   supported.
+
 ## Installing
 
 `npm install amqp-as-promised`
@@ -282,11 +294,6 @@ callback. If opts is omitted, defaults to `ack: false, prefetchCount: 1`
 
 Unsubscribes current callback (if any).
 
-### `queue.shift([reject[, requeue]])`
-
-To be used with `queue.subscribe({ack:true}, callback)`. `reject`
-rejects the previous message and will requeue it if `requeue` is true.
-
 ### `queue.name`
 
 Read only property with the queue name.
@@ -330,32 +337,5 @@ Example
 
 ```coffee
 amqpc.rpc('myexchange', 'routing.key', msg, [headers], {compress:true}).then (response) ->
-    console.log 'received message', response
-```
-
-### Progress
-
-*Since 0.4.0*
-
-The RPC supports
-[Q style progress](https://github.com/kriskowal/q#progress-notification)
-which can be used to send partial responses.
-
-Example
-
-```coffee
-amqpc.serve 'myexchange', 'routing.key',  (msg, headers, del, progress) ->
-    ... do some stuff
-    progress "it's almost done!!!"
-    ... do more stuff
-    return "here's the result"
-```
-
-Client side
-
-```coffee
-amqpc.rpc('myexchange', 'routing.key', msg).progress (partial) ->
-    console.log 'the server tries to tell me', partial
-.then (response) ->
     console.log 'received message', response
 ```

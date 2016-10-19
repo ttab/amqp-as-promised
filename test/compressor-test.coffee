@@ -1,4 +1,3 @@
-Q = require 'q'
 {compress, decompress} = require '../src/compressor'
 {gunzipSync, gzipSync} = require 'zlib'
 
@@ -6,23 +5,23 @@ describe 'compressor', ->
 
     describe 'compress', ->
 
-        wcomp = (as...) -> Q.all compress(as...)
+        wcomp = (as...) -> Promise.all compress(as...)
 
-        it 'returns [null,Q(msg)] when no compress prop', ->
+        it 'returns [null,Promise(msg)] when no compress prop', ->
             wcomp({panda:42}, null).should.eventually.eql [null, panda:42]
 
-        it 'returns [null,Q(msg)] when compress prop is false', ->
+        it 'returns [null,Promise(msg)] when compress prop is false', ->
             wcomp({panda:42}, {compress:false}).should.eventually.eql [null, panda:42]
 
         it 'returns a compressed buffer and compress:buffer', ->
-            wcomp(Buffer('panda'), {compress:true}).spread (h, v) ->
+            wcomp(Buffer('panda'), {compress:true}).then ([h, v]) ->
                 h.should.eql compress:'buffer'
                 Buffer.isBuffer(v).should.eql true
                 b = gunzipSync(v)
                 b.toString().should.eql 'panda'
 
         it 'returns a compressed buffer and compress:json', ->
-            wcomp({panda:42}, {compress:true}).spread (h, v) ->
+            wcomp({panda:42}, {compress:true}).then ([h, v]) ->
                 h.should.eql compress:'json'
                 Buffer.isBuffer(v).should.eql true
                 b = gunzipSync(v)
@@ -30,24 +29,24 @@ describe 'compressor', ->
 
     describe 'decompress', ->
 
-        wdecomp = (as...) -> Q.all decompress(as...)
+        wdecomp = (as...) -> Promise.all decompress(as...)
 
-        it 'returns [null,Q(msg)] when no compress prop', ->
+        it 'returns [null,Promise(msg)] when no compress prop', ->
             wdecomp({panda:42}, null).should.eventually.eql [null, panda:42]
 
-        it 'returns [null,Q(msg)] when compress prop is false', ->
+        it 'returns [null,Promise(msg)] when compress prop is false', ->
             wdecomp({panda:42}, {compress:false}).should.eventually.eql [null, panda:42]
 
         it 'decompresses to buffer when compress=buffer', ->
             p = gzipSync(Buffer 'panda')
-            wdecomp(p, {compress:'buffer'}).spread (h, v) ->
+            wdecomp(p, {compress:'buffer'}).then ([h, v]) ->
                 h.should.eql 'application/octet-stream'
                 Buffer.isBuffer(v).should.eql true
                 v.toString().should.eql 'panda'
 
         it 'decompresses to object when compress=json', ->
             p = gzipSync Buffer JSON.stringify panda:42
-            wdecomp(p, {compress:'json'}).spread (h, v) ->
+            wdecomp(p, {compress:'json'}).then ([h, v]) ->
                 h.should.eql 'application/json'
                 v.should.eql panda:42
 

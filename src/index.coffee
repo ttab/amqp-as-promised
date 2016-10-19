@@ -1,5 +1,5 @@
 log        = require 'bog'
-amqpClient = require './amqp-client'
+AmqpClient = require './amqp-client'
 Rpc        = require './rpc'
 RpcBackend = require './rpc-backend'
 
@@ -10,18 +10,18 @@ module.exports = (conf = {}) ->
     log.level conf.logLevel if conf.logLevel
 
     # support old-style configuration
-    conf = { connection: conf, local: conf.local } if not conf.connection
+    conf = { connection: conf } if not conf.connection
 
-    amqpc      = amqpClient conf
-    rpc        = new Rpc amqpc, conf.rpc
-    rpcBackend = new RpcBackend amqpc
+    client      = new AmqpClient conf
+    rpc        = new Rpc client, conf.rpc
+    rpcBackend = new RpcBackend client
 
     {
-        exchange: amqpc.exchange
-        queue: amqpc.queue
-        bind: amqpc.bind
+        exchange: client.exchange
+        queue: client.queue
+        bind: client.bind
         rpc: rpc.rpc
         serve: rpcBackend.serve
-        shutdown: amqpc.shutdown
-        local: amqpc.local
+        shutdown: client.shutdown
+        local: client.local
     }

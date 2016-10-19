@@ -1,128 +1,92 @@
 log             = require 'bog'
-Q               = require 'q'
-amqp            = require 'amqp'
+amqp            = require 'amqplib'
 ExchangeWrapper = require './exchange-wrapper'
 QueueWrapper    = require './queue-wrapper'
 
-module.exports = (conf) ->
+module.exports = class AmqpClient
 
-    local = conf.local || process.env.LOCAL
-    log.info("local means no amqp connection") if local
-
-    isShutdown = null
-
-    conn = do ->
-        # disable if local
-        return Q(local:true) if local
-        log.info "Connecting", conf.connection
-        def = Q.defer()
-        # amqp connection
-        mq = amqp.createConnection conf.connection
-        mq._ttQueues = mq._ttQueues ? {}
-        mq.on 'ready', (ev) ->
-            log.info 'amqp connection ready'
-            def.resolve mq
-        mq.on 'error', (err) ->
-            unless isShutdown
+    constructor: (@conf, @compat=require('./compat-node-amqp')) ->
+        [ uri, opts ] = @compat.connection(@conf)
+        log.info "connecting to:", uri
+        @channel = amqp.connect(uri, opts).then (conn) =>
+            conn.on 'error', (err) =>
                 log.warn 'amqp error:', (if err.message then err.message else err)
-                if typeof conf?.errorHandler == 'function'
-                    conf.errorHandler(err)
+                if typeof @conf?.errorHandler is 'function'
+                    @conf.errorHandler err
                 else
-                    throw err # make sure process crashes
-        def.promise
+                    throw err
+            conn.createChannel()
+        @exchanges = {}
+        @queues = {}
 
-    exchange = (name, opts) ->
-        return Q(name) if name instanceof ExchangeWrapper
-        throw new Error 'Unable connect exchange when local' if local
-        throw new Error 'Unable connect exchange when shutdown' if isShutdown
-        def = Q.defer()
-        conn.then (mq) ->
-            mq._ttExchanges = mq._ttExchanges ? {}
-            prom = mq._ttExchanges[name]
-            return (prom.then (ex) -> def.resolve ex) if prom
-            mq._ttExchanges[name] = def.promise
-            opts = opts ? {passive:true}
-            # the default exchange does not send basic.ack, so we will
-            # never receive any callbacks in exchange wrapper.
-            opts.confirm = true unless name == ''
-            mq.exchange(name, opts, (ex) ->
-                log.info 'exchange ready:', ex.name
-                def.resolve new ExchangeWrapper ex
-            ).on 'error', (err) ->
-                def.reject err
-        .done()
-        def.promise
+    _exchange: (name, type, opts) =>
+        return Promise.resolve(name) if name instanceof ExchangeWrapper
+        return @exchanges[name] if @exchanges[name]
+        @exchanges[name] = @channel.then (c) =>
+            (if not type
+                if name is ''
+                    Promise.resolve({ exchange: '' })
+                else
+                    c.checkExchange(name).then -> { exchange: name }
+            else
+                c.assertExchange(name, type, opts)
+            ).then (e) =>
+                log.info 'exchange ready:', e.exchange
+                new ExchangeWrapper @, e
 
-    queue = (qname, opts) =>
-        return Q(qname) if qname instanceof QueueWrapper
-        throw new Error 'Unable to connect queue when local' if local
-        throw new Error 'Unable to connect queue shutdown' if isShutdown
+    exchange: =>
+        [ name, type, opts ] = @compat.exchangeArgs arguments...
+        @compat.promise(@_exchange name, type, opts)
+
+    _queue: (qname, opts) =>
+        return Promise.resolve(qname) if qname instanceof QueueWrapper
         if qname != null and typeof qname == 'object'
             opts = qname
             qname = ''
         qname = '' if !qname
-        opts = opts ? if qname == '' then { exclusive: true } else { passive: true }
-        def = Q.defer()
-        conn.then (mq) =>
-            if qname != ''
-                prom = mq._ttQueues[qname]
-                return (prom.then (q) -> def.resolve q) if prom
-                mq._ttQueues[qname] = def.promise
-            mq.queue(qname, opts, (queue) =>
-                log.info 'queue created:', queue.name
-                mq._ttQueues[queue.name] = def.promise if qname == ''
-                def.resolve new QueueWrapper _self, queue
-            ).on 'error', (err) ->
-                def.reject err
-        .done()
-        def.promise
+        opts = opts ? if qname == '' then { exclusive: true }
+        return @queues[qname] if @queues[qname] and qname isnt ''
+        @queues[qname] = @channel.then (c) =>
+            (if not opts
+                c.checkQueue(qname)
+            else
+                c.assertQueue(qname, opts)
+            ).then (q) =>
+                log.info 'queue created:', q.queue
+                new QueueWrapper @, q
 
-    bind = (ex, q, topic, callback) ->
-        throw new Error 'Unable to bind when local' if local
-        throw new Error 'Unable to bind when shutdown' if isShutdown
+    queue: =>
+        [ qname, opts ] = @compat.queueArgs.apply(undefined, arguments)
+        @compat.promise(@_queue qname, opts)
+
+    _bind: (exchange, queue, topic, callback) =>
         if typeof topic == 'function'
             callback = topic
-            topic = q
-            q = ''
-        q = '' if not q
-        (Q.all [(exchange ex), (queue q)]).spread (ex, q) ->
-            Q.fcall ->
-                q.bind ex, topic
+            topic = queue
+            queue = ''
+        (Promise.all [(@_exchange exchange), (@_queue queue)])
+        .then ([ex, q]) ->
+            q.bind ex, topic
             .then (q) ->
                 q.subscribe callback if callback?
             .then ->
                 return q.name
 
-    unbind = (qname) ->
-        conn?.then? (mq) ->
-            return def.resolve true if mq.local
-            qp = mq._ttQueues[qname]
-            return def.resolve mq unless qp
-            qp
-        .then (q) ->
+    bind: (exchange, queue, topic, callback) =>
+        @compat.promise(@_bind exchange, queue, topic, callback)
+
+    _unbind: (queue) =>
+        @queue(queue).then (q) ->
             q.unbind()
         .then (q) ->
             q.unsubscribe()
         .then ->
-            return qname
+            return queue
 
-    shutdown = ->
-        return isShutdown.promise if isShutdown
-        def = isShutdown = Q.defer()
-        conn.then (mq) ->
-            return def.resolve true if mq.local
-            todo = for qname, qp of mq._ttQueues
-                qp.then (queue) ->
-                    unbind qname if queue.isAutoDelete()
-            Q.all(todo)
-            .then ->
-                log.info 'closing amqp connection'
-                mq.end()
-                log.info 'amqp closed'
-                def.resolve true
-            .catch (err) ->
-                def.reject err
-        .done()
-        def.promise
+    unbind: (queue) => @compat.promise(@_unbind queue)
 
-    return _self = { exchange, queue, bind, unbind, shutdown, local }
+    _shutdown: =>
+        @channel.then (c) ->
+            c.close()
+
+    shutdown: => @compat.promise(@_shutdown())

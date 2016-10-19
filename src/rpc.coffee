@@ -1,4 +1,3 @@
-Q     = require 'q'
 uuid  = require 'uuid'
 Cache = require 'mem-cache'
 merge = require './merge'
@@ -8,7 +7,7 @@ DEFAULT_TIMEOUT = 1000
 
 module.exports = class Rpc
 
-    constructor: (@amqpc, @options) ->
+    constructor: (@client, @options) ->
         @timeout = @options?.timeout || DEFAULT_TIMEOUT
         @responses = new Cache timeout:@timeout
         @responses.on 'expired', (ev) ->
@@ -17,38 +16,37 @@ module.exports = class Rpc
 
     returnChannel: =>
         if !@_returnChannel
-            @_returnChannel = @amqpc.queue('', { autoDelete: true, exclusive: true})
+            @_returnChannel = @client.queue('', { autoDelete: true, exclusive: true})
             @_returnChannel.then (q) =>
                 q.subscribe (msg, headers, deliveryInfo) =>
                     @resolveResponse deliveryInfo?.correlationId, msg, headers
         return @_returnChannel
 
     registerResponse: (corrId, options) =>
-        def = Q.defer()
+        def = {}
+        def.promise = new Promise (resolve, reject) ->
+            def.resolve = resolve
+            def.reject = reject
         options = options || {}
         value = {def:def, options:options}
         @responses.set corrId, value, options.timeout
         return def
 
     resolveResponse: (corrId, msg, headers) =>
-        [ corrId, prgsSeq ] = (corrId ? '').split '#x-progress:'
         if response = @responses.get corrId
             [ct, p] = decompress msg, headers
             p.then (payload) =>
-                if prgsSeq
-                    response.def.notify payload
-                else
-                    @responses.remove corrId
-                    response.def.resolve payload
+                @responses.remove corrId
+                response.def.resolve payload
             .catch (err) ->
                 response.def.reject err
 
     rpc: (exchange, routingKey, msg, headers, options) =>
         throw new Error 'Must provide msg' unless msg
-        Q.all([
-            @amqpc.exchange(exchange)
+        Promise.all([
+            @client.exchange(exchange)
             @returnChannel()
-        ]).spread (ex, q) =>
+        ]).then ([ex, q]) =>
             # the correlation id used to match up request/response
             corrId = uuid.v4()
             # options stored locally
@@ -71,7 +69,7 @@ module.exports = class Rpc
 
             # the timeout is provided to server side so server can
             # discard queued up timed out requests.
-            opts.headers.timeout = timeout
+            opts.headers.timeout = "#{timeout}"
 
             # maybe compress the payload
             [h, p] = compress msg, options
