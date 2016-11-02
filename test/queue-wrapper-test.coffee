@@ -72,6 +72,18 @@ describe 'QueueWrapper', ->
                     match { routingKey: 'cub', contentType: 'application/octet-stream' },
                     match acknowledge: match.func
 
+        it 'should handle plain text payloads', ->
+            queue.subscribe {}, cb
+            .then ->
+                channel.consume.should.have.been.calledWith 'pandas', match.func
+                channel.consume.firstCall.args[1] {
+                    properties:
+                        contentType: 'text/plain'
+                    fields: {}
+                    content: new Buffer('panda')
+                }
+                cb.should.have.been.calledWith 'panda', {}, match { contentType: 'text/plain' }
+
         it 'should deserialize json payloads', ->
             queue.subscribe {}, cb
             .then ->

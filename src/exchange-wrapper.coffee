@@ -8,6 +8,9 @@ module.exports = class ExchangeWrapper
     _publish: (routingKey, message, options={}) =>
         options = @client.compat.publishOpts(options)
         options.contentType = 'application/octet-stream' unless options.contentType
+        if typeof(message) is 'string'
+            message = new Buffer message
+            options.contentType = 'text/plain'
         if typeof(message) is 'object' and not (message instanceof Buffer)
             message = new Buffer JSON.stringify message
             options.contentType = 'application/json'

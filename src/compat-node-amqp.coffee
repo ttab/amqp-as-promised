@@ -62,6 +62,8 @@ module.exports =
                 clusterId       : data.properties?.clusterId
             content = if info.contentType is 'application/json'
                 JSON.parse data.content
+            else if info.contentType is 'text/plain'
+                data.content.toString()
             else
                 data.content
 
