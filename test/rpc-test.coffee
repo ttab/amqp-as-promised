@@ -55,6 +55,8 @@ describe 'Rpc', ->
         def = undefined
         beforeEach ->
             def = rpc.registerResponse '1234'
+        afterEach ->
+            def.promise.catch ->
 
         it 'should have a map of responses', ->
             rpc.should.have.property 'responses'
@@ -155,36 +157,36 @@ describe 'Rpc', ->
         describe 'callled with headers', ->
             beforeEach ->
                 queue.name = 'q123'
-                rpc = new Rpc amqpc, { timeout: 10000 }
+                rpc = new Rpc amqpc, { timeout: 500 }
 
             it 'should return a promise', ->
-                promise = rpc.rpc('hello', 'world', 'msg', { 'myHeader1':42 }, timestamp:new Date(42))
+                promise = rpc.rpc('hello', 'world', 'msg', { 'myHeader1':42 }, timestamp:new Date(42)).catch ->
                 promise.should.have.property 'then'
 
             it 'should call exchange.publish()', ->
-                rpc.rpc('hello', 'world', 'msg', { 'myHeader1':42 }, timestamp:new Date(42))
+                rpc.rpc('hello', 'world', 'msg', { 'myHeader1':42 }, timestamp:new Date(42)).catch ->
                 (new Promise((rs) -> setTimeout rs, 1)).then ->
                     exchange.publish.should.have.been.calledOnce
                     exchange.publish.should.have.been.calledWith 'world', 'msg',
                         match
                             replyTo:'q123',
                             headers:
-                                timeout:'10000',
+                                timeout:'500',
                                 myHeader1:42,
                         .and(match.has('correlationId')).and(match(deliveryMode:1))
 
             it 'should add exactly one corrId/deferred mapping', ->
-                rpc.rpc('hello', 'world', 'msg', { 'myHeader1':42 }, timestamp:new Date(42))
+                rpc.rpc('hello', 'world', 'msg', { 'myHeader1':42 }, timestamp:new Date(42)).catch ->
                 (new Promise((rs) -> setTimeout rs, 1)).then ->
                     rpc.responses.keys.should.have.length 1
 
             it 'should use something like a uuid as corrId', ->
-                rpc.rpc('hello', 'world', 'msg', { 'myHeader1':42 }, timestamp:new Date(42))
+                rpc.rpc('hello', 'world', 'msg', { 'myHeader1':42 }, timestamp:new Date(42)).catch ->
                 (new Promise((rs) -> setTimeout rs, 1)).then ->
                     rpc.responses.keys[0].should.match /^\w{8}-/
 
             it 'should properly resolve the promise with resolveResponse()', ->
-                promise = rpc.rpc('hello', 'world', 'msg', { 'myHeader1':42 }, timestamp:new Date(42))
+                promise = rpc.rpc('hello', 'world', 'msg', { 'myHeader1':42 }, timestamp:new Date(42)).catch ->
                 (new Promise((rs) -> setTimeout rs, 1)).then ->
                     rpc.responses.keys.should.have.length 1
                     rpc.resolveResponse rpc.responses.keys[0], 'solved!', {}
@@ -194,20 +196,20 @@ describe 'Rpc', ->
         describe 'called without headers', ->
             beforeEach ->
                 queue.name = 'q123'
-                rpc = new Rpc amqpc, { timeout: 10001 }
+                rpc = new Rpc amqpc, { timeout: 501 }
 
             it 'should still result in a published message', ->
-                rpc.rpc('hello', 'world', 'msg', undefined, timestamp:new Date(43))
+                rpc.rpc('hello', 'world', 'msg', undefined, timestamp:new Date(43)).catch ->
                 (new Promise((rs) -> setTimeout rs, 1)).then ->
                     exchange.publish.should.have.been.calledWith 'world', 'msg',
                         match
                             replyTo:'q123'
                             headers:
-                                timeout:'10001'
+                                timeout:'501'
                         .and(match (val) -> val.correlationId?)
 
             it 'should properly resolve the promise with resolveResponse()', ->
-                promise = rpc.rpc('hello', 'world', 'msg', undefined, timestamp:new Date(43))
+                promise = rpc.rpc('hello', 'world', 'msg', undefined, timestamp:new Date(43)).catch ->
                 (new Promise((rs) -> setTimeout rs, 1)).then ->
                     rpc.resolveResponse rpc.responses.keys[0], 'solved!', {}
                     promise.should.eventually.eql 'solved!'
@@ -229,7 +231,7 @@ describe 'Rpc', ->
 
         describe 'called with a timeout option', ->
             beforeEach ->
-                spy rpc, 'registerResponse'
+                stub(rpc, 'registerResponse').returns Promise.resolve()
 
             it 'should pass the timeout on to registerResponse()', ->
                 rpc.rpc('hello', 'world', 'msg', {}, { timeout: 23 })
