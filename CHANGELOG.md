@@ -1,6 +1,10 @@
 Changelog
 =========
 
+## 3.0.1 - 2016-11-02
+
+ * Bug fix: didn't support `text/plain` payloads correctly.
+
 ## 3.0.0 - 2016-10-19
 
  * The underlying amqp library has changed from `node-amqp` to
