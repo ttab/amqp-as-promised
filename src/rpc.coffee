@@ -41,7 +41,7 @@ module.exports = class Rpc
             .catch (err) ->
                 response.def.reject err
 
-    rpc: (exchange, routingKey, msg, headers, options) =>
+    _rpc: (exchange, routingKey, msg, headers, options) =>
         throw new Error 'Must provide msg' unless msg
         Promise.all([
             @client.exchange(exchange)
@@ -81,3 +81,6 @@ module.exports = class Rpc
             .then ->
                 # promise for rpc return
                 def.promise
+
+    rpc: (exchange, routingKey, msg, headers, options) =>
+        @client.compat.promise(@_rpc exchange, routingKey, msg, headers, options)

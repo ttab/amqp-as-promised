@@ -13,6 +13,7 @@ describe 'Rpc', ->
         amqpc =
             exchange: stub().returns Promise.resolve exchange
             queue: stub().returns Promise.resolve queue
+            compat: require '../src/compat-node-amqp'
         rpc = new Rpc amqpc
 
     describe '.constructor()', ->
