@@ -54,9 +54,10 @@ describe 'Rpc', ->
                 return undefined
 
     describe '.registerResponse()', ->
-        def = undefined
+        def = deserialize = undefined
         beforeEach ->
-            def = rpc.registerResponse '1234'
+            deserialize = ->
+            def = rpc.registerResponse '1234', {}, deserialize
         afterEach ->
             def.promise.catch ->
 
@@ -67,7 +68,10 @@ describe 'Rpc', ->
             expect(def).to.have.property 'resolve'
 
         it 'should add a mapping between a corrId and a deferred', ->
-            rpc.responses.get('1234').should.eql {def:def,options:{}}
+            rpc.responses.get('1234').should.eql
+                def         : def
+                options     : {}
+                deserialize : deserialize
 
     describe '.resolveResponse()', ->
 
@@ -99,15 +103,13 @@ describe 'Rpc', ->
                 def = rpc.registerResponse '1234'
                 buf = Buffer('so wrong') # this is not valid gzip
                 rpc.resolveResponse '1234', buf, compress:'json'
-                def.promise.catch (err) ->
-                    err.toString().should.eql 'Error: incorrect header check'
+                def.promise.should.eventually.be.rejectedWith 'incorrect header check'
 
             it 'rejects failed deserialization', ->
                 def = rpc.registerResponse '1234'
                 buf = gzipSync Buffer('so wrong') # this is not valid json
                 rpc.resolveResponse '1234', buf, compress:'json'
-                def.promise.catch (err) ->
-                    err.toString()[0...31].should.eql 'SyntaxError: Unexpected token s'
+                def.promise.should.eventually.be.rejectedWith 'Unexpected token s'
 
         describe 'with a compress:buffer header', ->
 
@@ -117,6 +119,14 @@ describe 'Rpc', ->
                 rpc.resolveResponse '1234', buf, compress:'buffer'
                 def.promise.then (res) ->
                     res.toString().should.eql 'panda'
+
+        describe 'with an error payload', ->
+
+            it 'returns a rejection', ->
+                def = rpc.registerResponse '1234'
+                rpc.resolveResponse '1234', { error: { message: 'panda attack!', code: 'EPANDA' }}
+                def.promise.should.eventually.be.rejectedWith('panda attack!')
+                    .and.have.property 'code', 'EPANDA'
 
     describe 'response expiration', ->
         beforeEach ->

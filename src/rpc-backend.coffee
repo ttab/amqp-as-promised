@@ -34,7 +34,7 @@ module.exports = class RpcBackend
             queue.subscribe opts, @_mkcallback(defaultex, callback, opts)
 
     # Creates a callback funtion which respects replyTo/correlationId
-    _mkcallback: (exchange, handler, subopts) ->
+    _mkcallback: (exchange, handler, subopts, serializeError=require('./error-serializer')) ->
         (msg, headers, info, ack) -> doack(subopts, ack) ->
             # no replyTo, no rpc
             return unless info.replyTo?
@@ -74,7 +74,7 @@ module.exports = class RpcBackend
             .catch (err) ->
                 log.error err
                 Promise.resolve().then ->
-                    exchange.publish(info.replyTo, { error: err.message ? err }, opts)
+                    exchange.publish(info.replyTo, serializeError(err), opts)
                 .then ->
                     throw err if subopts?.ack # let ack see error
                 .catch (perr) ->

@@ -57,7 +57,7 @@ describe 'RpcBackend', ->
             handler.returns Promise.reject new Error('error msg')
             callback 'msg', { hello: 'world' }, { correlationId: '1234', replyTo: 'reply'}
             .then ->
-                exchange.publish.should.have.been.calledWith 'reply', { error: 'error msg'}, match.object
+                exchange.publish.should.have.been.calledWith 'reply', { error: message: 'error msg'}, match.object
 
         it 'should refuse messages without replyTo', ->
             expect(callback 'msg', { hello: 'world' }, { correlationId: '1234'}).to.be.undefined
@@ -182,7 +182,7 @@ describe 'RpcBackend', ->
             callback = rpc._mkcallback exchange, handler, {ack:true}
             callback 'msg', { hello: 'world' }, { correlationId: '1234', replyTo: 'reply'}, ack
             .then ->
-                exchange.publish.should.have.been.calledWith 'reply', { error: 'error msg'}, match.object
+                exchange.publish.should.have.been.calledWith 'reply', { error: message: 'error msg'}, match.object
                 ack.acknowledge.should.have.been.calledOnce
                 ack.acknowledge.args[0].should.eql [true, false]
 
@@ -191,6 +191,6 @@ describe 'RpcBackend', ->
             callback = rpc._mkcallback exchange, handler, {ack:true}
             callback 'msg', { hello: 'world' }, { correlationId: '1234', replyTo: 'reply'}, ack
             .then ->
-                exchange.publish.should.have.been.calledWith 'reply', { error: 'error msg'}, match.object
+                exchange.publish.should.have.been.calledWith 'reply', { error: message: 'error msg'}, match.object
                 ack.acknowledge.should.have.been.calledOnce
                 ack.acknowledge.args[0].should.eql [true, false]

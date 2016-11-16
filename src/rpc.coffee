@@ -22,13 +22,12 @@ module.exports = class Rpc
                     @resolveResponse deliveryInfo?.correlationId, msg, headers
         return @_returnChannel
 
-    registerResponse: (corrId, options) =>
+    registerResponse: (corrId, options={}, deserialize=require('./error-deserializer')) =>
         def = {}
         def.promise = new Promise (resolve, reject) ->
             def.resolve = resolve
             def.reject = reject
-        options = options || {}
-        value = {def:def, options:options}
+        value = {def:def, options:options, deserialize:deserialize}
         @responses.set corrId, value, options.timeout
         return def
 
@@ -37,7 +36,7 @@ module.exports = class Rpc
             [ct, p] = decompress msg, headers
             p.then (payload) =>
                 @responses.remove corrId
-                response.def.resolve payload
+                response.def.resolve response.deserialize payload
             .catch (err) ->
                 response.def.reject err
 
