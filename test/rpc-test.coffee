@@ -51,6 +51,7 @@ describe 'Rpc', ->
                     expect(corrId).to.equal '1234'
                     done()
                 rpc.returnChannel()
+                return undefined
 
     describe '.registerResponse()', ->
         def = undefined
@@ -84,25 +85,6 @@ describe 'Rpc', ->
 
             it 'should handle non-existant corrIds gracefully', ->
                 rpc.resolveResponse '9999', {}
-
-        describe.skip 'with a progress corrId', ->
-            def = undefined
-            beforeEach ->
-                def = rpc.registerResponse '1234'
-                spy def, 'notify'
-                rpc.resolveResponse '1234#x-progress:0', 'such progress!'
-
-            it 'should notify the promise that progress has been made', ->
-                def.notify.should.have.been.calledWith 'such progress!'
-
-            it 'should not remove the deferred from the response list', ->
-                expect(rpc.responses.get('1234')).to.be.an 'object'
-
-            it 'should not resolve the promise itself', ->
-                def.promise.should.not.be.fulfilled
-
-            it 'should handle non-existant corrIds gracefully', ->
-                rpc.resolveResponse '9999#x-progress:0', {}
 
         describe 'with a compress:json header', ->
 

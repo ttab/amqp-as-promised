@@ -63,22 +63,6 @@ describe 'AmqpClient', ->
             .then ->
                 channel.checkExchange.should.have.been.calledWith 'panda'
 
-        describe.skip 'should set the confirm flag when creating an exchange', ->
-            it 'with explicit options', ->
-                client.exchange('panda', { type: 'topic', durable: true }).then ->
-                    channel.assertExchange.should.have.been.calledWith 'panda', { type: 'topic', durable: true, confirm: true }
-            it 'without explicit options', ->
-                client.exchange('panda').then ->
-                    channel.assertExchange.should.have.been.calledWith 'panda', { passive: true, confirm: true }
-
-        describe.skip 'should not set the confirm flag for the default exchange when creating an exchange', ->
-            it 'with explicit options', ->
-                client.exchange('', { durable: true }).then ->
-                    channel.assertExchange.should.have.been.calledWith '', { durable: true }
-            it 'without explicit options', ->
-                client.exchange('').then ->
-                    channel.assertExchange.should.have.been.calledWith '', { passive: true }
-
         it 'should return an ExchangeWrapper', ->
             client.exchange('panda').should.eventually.be.an.instanceof ExchangeWrapper
 
@@ -115,15 +99,6 @@ describe 'AmqpClient', ->
             client.queue 'pandas'
             .then ->
                 channel.checkQueue.should.have.been.calledWith 'pandas'
-
-
-        it.skip 'should assume exclusive:true when called without name and opts', ->
-            client.queue().then ->
-                amqp.queue.should.have.been.calledWith '', { exclusive: true }
-
-        it.skip 'should assume passive:true when called with name but without opts', ->
-            client.queue('panda').then ->
-                amqp.queue.should.have.been.calledWith 'panda', { passive:true }
 
         it 'should pass given name and opts on when creating the queue', ->
             client.queue('pandas', { my: 'option' })
@@ -201,11 +176,6 @@ describe 'AmqpClient', ->
         it 'should catch queue errors signalled by amqp, and reject the bind promise', ->
             channel.checkQueue.returns Promise.reject new Error 'Error!'
             client.bind('panda', 'pandas', '#').should.be.rejectedWith 'Error!'
-
-    describe.skip 'conn', ->
-        it 'should invoke amqp.createConnection with the connection parameters', ->
-            client.exchange('panda').then ->
-                nodeAmqp.createConnection.should.have.been.calledWith { url: 'url' }
 
     describe 'connection error', ->
 

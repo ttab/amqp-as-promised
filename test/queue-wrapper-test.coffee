@@ -135,9 +135,6 @@ describe 'QueueWrapper', ->
             queue.bind(exchange, 'routing.key').then ->
                 channel.bindQueue.should.have.been.calledWith 'pandas', 'my-exchange', 'routing.key'
 
-        it.skip 'should signal an error if no topic is given', ->
-            queue.bind('my-exchange').should.be.rejectedWith 'Topic is not a string'
-
         it 'should signal an error if topic is not a string', ->
             queue.bind('my-exchange', {}).should.be.rejectedWith 'Topic is not a string'
 
