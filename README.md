@@ -190,8 +190,16 @@ The value returned from the handler will be sent back on the queue
 specified by the `replyTo` header, with the `correlationId` set.
 
 If an exception is thrown by the handler, it will be propagated back
-to the client as an object with a `error` property containing the
-error message.
+to the client as an object:
+```
+{
+  "error": {
+    "message": <exception.message>,
+    [ "code": <exception.code>, ]
+    [ "errno": <exception.errno> ]
+  }
+}
+```
 
 ### Serve with prefetchCount/ack
 
@@ -312,7 +320,9 @@ the return value:
     `correlationId` headers are set automatically.
  3. Waits for a reply on the return queue, and resolves the promise
     with the contents of the reply. If no reply is received before the
-    timeout, the promise is instead rejected.
+    timeout, the promise is instead rejected. Replies that are JSON
+    objects that have an `error` property set are assumed to be remote
+    errors, and will result in a rejected promise.
 
 #### Parameters
 

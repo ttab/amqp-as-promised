@@ -1,6 +1,17 @@
 Changelog
 =========
 
+## 4.0.0 - 2016-11-18
+
+ * Improved error handling:
+   1. `RpcBackend.serve()` will now serialize errors in a slightly different
+      format, preserving `message`, `code` and `errno` if present in
+      the error object.
+   2. `Rpc.rpc()` will treat any return message that is a JSON object
+      containing an `error` property as a remote error, resulting in a
+      rejected promise. Previously we didn't care to inspect return
+      messages, so remote errors would still yield fulfilled promises.
+
 ## 3.0.2 - 2016-11-08
 
  * Bug fix: didn't provide backwards compatible promises for `rpc()`
