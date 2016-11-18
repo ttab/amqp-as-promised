@@ -57,7 +57,7 @@ describe 'RpcBackend', ->
             handler.returns Promise.reject new Error('error msg')
             callback 'msg', { hello: 'world' }, { correlationId: '1234', replyTo: 'reply'}
             .then ->
-                exchange.publish.should.have.been.calledWith 'reply', { error: 'error msg'}, match.object
+                exchange.publish.should.have.been.calledWith 'reply', { error: message: 'error msg'}, match.object
 
         it 'should refuse messages without replyTo', ->
             expect(callback 'msg', { hello: 'world' }, { correlationId: '1234'}).to.be.undefined
@@ -78,46 +78,6 @@ describe 'RpcBackend', ->
             exchange.publish.throws new Error 'such fail!'
             callback('msg', { hello: 'world' }, { correlationId: '1234', replyTo: 'reply'})
                 .should.eventually.be.undefined
-
-        it.skip 'should invoke the handler with a progress callback', ->
-            callback 'msg', { hello: 'world' }, { correlationId: '1234', replyTo: 'reply'}
-            .then ->
-                handler.should.have.been.calledWith match.string, match.object, match.object, match.func
-
-        it.skip 'when invoked, the progress callback should publish progress messages', ->
-            handler = (msg, headers, del, progress) ->
-                Promise.resolve().then ->
-                    progress 'such progress! (1)'
-                .then ->
-                    progress 'such progress! (2)'
-                    return 'returnValues'
-            callback = rpc._mkcallback exchange, handler
-
-            callback 'msg', { hello: 'world' }, { correlationId: '1234', replyTo: 'reply'}
-            .then ->
-                exchange.publish.should.have.been.calledWith 'reply', 'such progress! (1)', { correlationId: '1234#x-progress:0' }
-                exchange.publish.should.have.been.calledWith 'reply', 'such progress! (2)', { correlationId: '1234#x-progress:1' }
-                exchange.publish.should.have.been.calledWith 'reply', 'returnValues', { correlationId: '1234' }
-
-        it.skip 'the progress callback also compresses if compress header', ->
-            handler = (msg, headers, del, progress) ->
-                Promise.resolve().then ->
-                    progress 'such progress! (1)'
-                .then ->
-                    progress 'such progress! (2)'
-                    return 'returnValues'
-            callback = rpc._mkcallback exchange, handler
-            v = gzipSync Buffer JSON.stringify panda:true
-            callback v, { hello: 'world', compress:'json' },
-            { correlationId: '1234', replyTo: 'reply'}
-            .then ->
-                [rk1, p1, o1] = exchange.publish.args[0]
-                [rk2, p2, o2] = exchange.publish.args[1]
-                JSON.parse(gunzipSync(p1).toString()).should.eql 'such progress! (1)'
-                JSON.parse(gunzipSync(p2).toString()).should.eql 'such progress! (2)'
-                expect(o1?.headers?.compress).to.eql 'json'
-                expect(o2?.headers?.compress).to.eql 'json'
-
 
     describe '._mkcallback()', ->
         exchange = { publish: stub() }
@@ -222,7 +182,7 @@ describe 'RpcBackend', ->
             callback = rpc._mkcallback exchange, handler, {ack:true}
             callback 'msg', { hello: 'world' }, { correlationId: '1234', replyTo: 'reply'}, ack
             .then ->
-                exchange.publish.should.have.been.calledWith 'reply', { error: 'error msg'}, match.object
+                exchange.publish.should.have.been.calledWith 'reply', { error: message: 'error msg'}, match.object
                 ack.acknowledge.should.have.been.calledOnce
                 ack.acknowledge.args[0].should.eql [true, false]
 
@@ -231,6 +191,6 @@ describe 'RpcBackend', ->
             callback = rpc._mkcallback exchange, handler, {ack:true}
             callback 'msg', { hello: 'world' }, { correlationId: '1234', replyTo: 'reply'}, ack
             .then ->
-                exchange.publish.should.have.been.calledWith 'reply', { error: 'error msg'}, match.object
+                exchange.publish.should.have.been.calledWith 'reply', { error: message: 'error msg'}, match.object
                 ack.acknowledge.should.have.been.calledOnce
                 ack.acknowledge.args[0].should.eql [true, false]

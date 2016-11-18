@@ -10,6 +10,7 @@ global.mock   = sinon.mock
 chai.should()
 chai.use(require 'chai-as-promised')
 chai.use(require 'sinon-chai')
+chai.use(require 'chai-like')
 
 global.proxyquire = require 'proxyquire'
 
