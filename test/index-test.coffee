@@ -36,3 +36,6 @@ describe 'Index', ->
         index cfg
         amqpc.should.have.been.calledWith { connection: { host: 'host', vhost: 'vhost' } }
         Rpc.should.have.been.calledWith match.object
+
+    it 'exposes RpcError', ->
+        index.should.have.property 'RpcError'

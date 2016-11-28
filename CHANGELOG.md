@@ -1,6 +1,10 @@
 Changelog
 =========
 
+## 4.0.1 - 2016-11-28
+
+ * Expose `RpcError` as an exported class.
+
 ## 4.0.0 - 2016-11-18
 
  * Improved error handling:

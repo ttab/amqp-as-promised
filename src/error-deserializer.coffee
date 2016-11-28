@@ -1,6 +1,6 @@
 FIELDS = [ 'message', 'code', 'errno' ]
 
-class RpcError extends Error
+RpcError = require './rpc-error'
 
 module.exports = (payload) ->
     return Promise.resolve payload unless payload?.error

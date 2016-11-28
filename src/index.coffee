@@ -12,7 +12,7 @@ module.exports = (conf = {}) ->
     # support old-style configuration
     conf = { connection: conf } if not conf.connection
 
-    client      = new AmqpClient conf
+    client     = new AmqpClient conf
     rpc        = new Rpc client, conf.rpc
     rpcBackend = new RpcBackend client
 
@@ -25,3 +25,5 @@ module.exports = (conf = {}) ->
         shutdown: client.shutdown
         local: client.local
     }
+
+module.exports.RpcError = require './rpc-error'
