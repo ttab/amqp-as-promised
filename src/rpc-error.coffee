@@ -1,3 +1,4 @@
 module.exports = class RpcError extends Error
-    constructor: ->
+    constructor: (message) ->
+        @message = message if message
         super
