@@ -1,6 +1,10 @@
 Changelog
 =========
 
+## 4.0.3 - 2016-12-01
+
+ * Fixed inconsistent backwards compatibility for non-JSON payloads.
+
 ## 4.0.1 - 2016-11-28
 
  * Expose `RpcError` as an exported class.
