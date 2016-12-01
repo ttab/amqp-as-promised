@@ -30,7 +30,14 @@ module.exports =
 
     queueArgs: (qname, opts) -> [ qname, opts ]
 
-    publishOpts: (opts) -> opts
+    publishArgs: (routingKey, message, options) ->
+        options.contentType = 'application/octet-stream' unless options.contentType
+        if typeof(message) is 'string'
+            message = new Buffer message
+        if typeof(message) is 'object' and not (message instanceof Buffer)
+            message = new Buffer JSON.stringify message
+            options.contentType = 'application/json'
+        [ routingKey, message, options ]
 
     subscribeOpts: (opts) ->
         noAck     : !opts?.ack
@@ -62,8 +69,6 @@ module.exports =
                 clusterId       : data.properties?.clusterId
             content = if info.contentType in [ 'application/json', 'text/json' ]
                 JSON.parse data.content
-            else if info.contentType is 'text/plain'
-                data.content.toString()
             else
                 { data: data.content, contentType: info.contentType }
 

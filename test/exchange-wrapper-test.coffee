@@ -19,15 +19,3 @@ describe 'ExchangeWrapper', ->
             .then ->
                 channel.publish.should.have.been.calledWith 'panda', 'cub', match.instanceOf(Buffer), match
                     contentType: 'application/octet-stream'
-
-        it 'should bufferize plain text messages', ->
-            exchange.publish 'cub', 'panda'
-            .then ->
-                channel.publish.should.have.been.calledWith 'panda', 'cub', match.instanceOf(Buffer), match
-                    contentType: 'text/plain'
-
-        it 'should serialize objects as json', ->
-            exchange.publish 'cub', { panda: true }
-            .then ->
-                channel.publish.should.have.been.calledWith 'panda', 'cub', match.instanceOf(Buffer), match
-                    contentType: 'application/json'

@@ -43,14 +43,6 @@ describe 'node-ampq compatibility', ->
                 content: new Buffer('{"hello": "world"}')
             cb.should.have.been.calledWith { 'hello': 'world' }, match.object, match.object
 
-        it 'should handle text/plain payloads', ->
-            cb = spy()
-            compat.callback(client, cb)
-                properties: { contentType: 'text/plain' }
-                fields: {}
-                content: new Buffer('hello, world')
-            cb.should.have.been.calledWith 'hello, world'
-
         it 'should handle other content types', ->
             cb = spy()
             buf = new Buffer('hello, world')
@@ -59,6 +51,15 @@ describe 'node-ampq compatibility', ->
                 fields: {}
                 content: buf
             cb.should.have.been.calledWith { data: buf, contentType: 'application/octet-stream' }
+
+        it 'should handle text/plain like regular payloads', ->
+            cb = spy()
+            buf = new Buffer('hello, world')
+            compat.callback(client, cb)
+                properties: { contentType: 'text/plain' }
+                fields: {}
+                content: buf
+            cb.should.have.been.calledWith { data: buf, contentType: 'text/plain' }
 
         it 'should suppply an ack object', ->
             data =
@@ -107,3 +108,25 @@ describe 'node-ampq compatibility', ->
         it 'should translate ack to noAck', ->
             compat.subscribeOpts({ ack: true }).should.have.property 'noAck', false
             compat.subscribeOpts({ ack: false }).should.have.property 'noAck', true
+
+
+    describe '.publishArgs()', ->
+
+        it 'should publish the message', ->
+            buf = new Buffer('panda')
+            [ key, msg, opts ] = compat.publishArgs 'cub', buf, {}
+            key.should.eql 'cub'
+            msg.should.eql buf
+            opts.should.have.property 'contentType', 'application/octet-stream'
+
+        it 'should bufferize plain text messages', ->
+            [ key, msg, opts ] = compat.publishArgs 'cub', 'panda', {}
+            key.should.eql 'cub'
+            msg.should.be.instanceof Buffer
+            opts.should.have.property 'contentType', 'application/octet-stream'
+
+        it 'should serialize objects as json', ->
+            [ key, msg, opts ] = compat.publishArgs 'cub', { panda: true }, {}
+            key.should.eql 'cub'
+            msg.should.be.instanceof Buffer
+            opts.should.have.property 'contentType', 'application/json'
