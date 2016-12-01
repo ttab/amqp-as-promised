@@ -27,13 +27,38 @@ describe 'node-ampq compatibility', ->
             client =
                 channel: Promise.resolve channel
 
-        it 'should deserialize the payload if it is json', ->
+        it 'should deserialize the payload if it is text/json', ->
+            cb = spy()
+            compat.callback(client, cb)
+                properties: { contentType: 'text/json' }
+                fields: {}
+                content: new Buffer('{"hello": "world"}')
+            cb.should.have.been.calledWith { 'hello': 'world' }, match.object, match.object
+
+        it 'should deserialize the payload if it is application/json', ->
             cb = spy()
             compat.callback(client, cb)
                 properties: { contentType: 'application/json' }
                 fields: {}
                 content: new Buffer('{"hello": "world"}')
             cb.should.have.been.calledWith { 'hello': 'world' }, match.object, match.object
+
+        it 'should handle text/plain payloads', ->
+            cb = spy()
+            compat.callback(client, cb)
+                properties: { contentType: 'text/plain' }
+                fields: {}
+                content: new Buffer('hello, world')
+            cb.should.have.been.calledWith 'hello, world'
+
+        it 'should handle other content types', ->
+            cb = spy()
+            buf = new Buffer('hello, world')
+            compat.callback(client, cb)
+                properties: { contentType: 'application/octet-stream' }
+                fields: {}
+                content: buf
+            cb.should.have.been.calledWith { data: buf, contentType: 'application/octet-stream' }
 
         it 'should suppply an ack object', ->
             data =

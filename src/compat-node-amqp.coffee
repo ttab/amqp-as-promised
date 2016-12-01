@@ -60,12 +60,12 @@ module.exports =
                 userId          : data.properties?.userId
                 appId           : data.properties?.appId
                 clusterId       : data.properties?.clusterId
-            content = if info.contentType is 'application/json'
+            content = if info.contentType in [ 'application/json', 'text/json' ]
                 JSON.parse data.content
             else if info.contentType is 'text/plain'
                 data.content.toString()
             else
-                data.content
+                { data: data.content, contentType: info.contentType }
 
             ack = acknowledge: ->
                 client.channel.then (c)-> c.ack data

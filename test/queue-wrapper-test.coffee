@@ -67,7 +67,8 @@ describe 'QueueWrapper', ->
                         routingKey: 'cub'
                     content: new Buffer('{"panda": true}')
                 }
-                cb.should.have.been.calledWith match.instanceOf(Buffer),
+                cb.should.have.been.calledWith \
+                    match { data: match.instanceOf(Buffer), contentType: 'application/octet-stream' },
                     { 'x-panda': true },
                     match { routingKey: 'cub', contentType: 'application/octet-stream' },
                     match acknowledge: match.func
