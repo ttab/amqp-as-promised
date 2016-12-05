@@ -193,6 +193,22 @@ describe 'AmqpClient', ->
                 conn.emit 'error', new Error("failed badly")
                 handler.should.have.been.calledOnce
 
+    describe 'waitForConnection', ->
+
+        beforeEach ->
+            amqp.connect = stub()
+            amqp.connect.onFirstCall().returns Promise.reject new Error("bad")
+            amqp.connect.onSecondCall().returns Promise.resolve conn
+
+        it 'without it, fails', ->
+            client = new AmqpClient { connection: url: 'amqp://panda' }
+            client.channel.catch (err) ->
+                err.message.should.eql 'bad'
+
+        it 'with it, ok', ->
+            client = new AmqpClient { waitForConnection:100, connection: url: 'amqp://panda' }
+            client.channel
+
     describe '.unbind()', ->
         client = undefined
         beforeEach ->

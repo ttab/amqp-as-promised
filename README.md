@@ -74,10 +74,17 @@ If true, means there will be no AMQP connection. Default: false
 
 ### `errorHandler`
 
-*Since 2.0* connection errors are rethrown to crash process.
+*Since 2.0.0* connection errors are rethrown to crash process.
 
 * `errorHandler`: sets a handler function to receive the error instead of
 throwing to process.
+
+### `waitForConnection`
+
+*Since 4.1.0*
+
+* `waitForConnection`: on startup, keeps retrying to connect until
+  successful. Will not attempt reconnect after established connection.
 
 ## Example config
 

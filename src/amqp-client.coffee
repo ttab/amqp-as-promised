@@ -3,19 +3,31 @@ amqp            = require 'amqplib'
 ExchangeWrapper = require './exchange-wrapper'
 QueueWrapper    = require './queue-wrapper'
 
+wait = (time) -> new Promise (rs) -> setTimeout rs, time
+
 module.exports = class AmqpClient
 
     constructor: (@conf, @compat=require('./compat-node-amqp')) ->
         [ uri, opts ] = @compat.connection(@conf)
         log.info "connecting to:", uri
-        @channel = amqp.connect(uri, opts).then (conn) =>
+        reconnect = => amqp.connect(uri, opts).then (conn) =>
             conn.on 'error', (err) =>
+                return if @_shuttingDown
                 log.warn 'amqp error:', (if err.message then err.message else err)
                 if typeof @conf?.errorHandler is 'function'
                     @conf.errorHandler err
                 else
                     throw err
             conn.createChannel()
+        .catch (err) =>
+            if @conf.waitForConnection
+                log.info "waiting for connection to:", uri
+                time = @conf.waitForConnection
+                time = 1000 if typeof time != 'number'
+                wait(time).then reconnect
+            else
+                throw err
+        @channel = reconnect()
         @exchanges = {}
         @queues = {}
 
@@ -89,4 +101,6 @@ module.exports = class AmqpClient
         @channel.then (c) ->
             c.close()
 
-    shutdown: => @compat.promise(@_shutdown())
+    shutdown: =>
+        @_shuttingDown = true
+        @compat.promise(@_shutdown())

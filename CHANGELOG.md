@@ -1,6 +1,11 @@
 Changelog
 =========
 
+## 4.1.0 - 2016-12-05
+
+ * `waitForConnection` feature to wait for rabbitmq server to become
+   available. This is not a reconnect feature.
+
 ## 4.0.3 - 2016-12-01
 
  * Fixed inconsistent backwards compatibility for non-JSON payloads.
