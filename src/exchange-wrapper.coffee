@@ -5,7 +5,11 @@ module.exports = class ExchangeWrapper
 
     _publish: (routingKey, message, options) =>
         @client.channel.then (c) =>
-            c.publish @name, routingKey, message, options
+            new Promise (rs, rj) =>
+                if c.publish @name, routingKey, message, options
+                    return rs()
+                else
+                    c.once 'drain', -> rs()
 
     publish: (routingKey, message, options={}) =>
         [ routingKey, message, options ] = @client.compat.publishArgs(routingKey, message, options)
