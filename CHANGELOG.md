@@ -1,6 +1,10 @@
 Changelog
 =========
 
+## 4.1.1 - 2016-12-14
+
+  * Bug fix: publish() returned prematurely if the write buffer was full
+
 ## 4.1.0 - 2016-12-05
 
  * `waitForConnection` feature to wait for rabbitmq server to become
