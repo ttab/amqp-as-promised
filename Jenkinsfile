@@ -13,10 +13,19 @@ node {
     }
 
     stage('mocha') {
-      sh '''
-JUNIT_REPORT_PATH=test-results.xml ./node_modules/.bin/mocha -R mocha-jenkins-reporter || true
-'''
-      junit "test-results.xml"
+      try {
+        sh 'JUNIT_REPORT_PATH=test-results.xml ./node_modules/.bin/mocha -R mocha-jenkins-reporter'
+      } finally {
+        junit "test-results.xml"
+      }
+    }
+
+    stage('lint') {
+      try {
+        sh './node_modules/.bin/coffeelint src --reporter checkstyle > checkstyle.xml'
+      } finally {
+        checkstyle pattern: 'checkstyle.xml'
+      }
     }
   }
 

@@ -14,7 +14,7 @@ indent_style = space
 [{*.coffee,*.jade}]
 indent_size = 4
 
-[{package.json,.travis.yml}]
+[{package.json,Jenkinsfile}]
 indent_size = 2
 
 [*.md]
