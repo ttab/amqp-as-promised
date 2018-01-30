@@ -1,6 +1,11 @@
 Changelog
 =========
 
+## 4.2.0 - 2018-01-30
+
+  * `setMaxListeners()` on the created channel in order to avoid
+    misleading memory leak warnings.
+
 ## 4.1.1 - 2016-12-14
 
   * Bug fix: publish() returned prematurely if the write buffer was full
