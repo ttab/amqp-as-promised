@@ -14,7 +14,6 @@ node {
 
     stage('mocha') {
       sh '''
-npm install mocha-jenkins-reporter
 JUNIT_REPORT_PATH=test-results.xml ./node_modules/.bin/mocha -R mocha-jenkins-reporter || true
 '''
       junit "test-results.xml"
