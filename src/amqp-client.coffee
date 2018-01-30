@@ -18,7 +18,11 @@ module.exports = class AmqpClient
                     @conf.errorHandler err
                 else
                     throw err
-            conn.createChannel()
+            conn.createChannel().then (c) =>
+                # set max listeners to something arbitrarily large in
+                # order to avoid misleading 'memory leak' error messages
+                c.setMaxListeners @conf.maxListeners or 1000
+                c
         .catch (err) =>
             if @conf.waitForConnection
                 log.info "waiting for connection to:", uri

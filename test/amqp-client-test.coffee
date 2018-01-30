@@ -21,6 +21,7 @@ describe 'AmqpClient', ->
         channel.unbindQueue =  stub().returns Promise.resolve()
         channel.consume =  stub().returns Promise.resolve { consumerTag: '1234' }
         channel.prefetch = stub().returns Promise.resolve()
+        channel.setMaxListeners = stub()
 
         conn = new EventEmitter
         conn.createChannel = stub().returns Promise.resolve channel
@@ -35,6 +36,11 @@ describe 'AmqpClient', ->
         it 'should connect using conf.uri', ->
             client = new AmqpClient { connection: url: 'amqp://panda' }
             amqp.connect.should.have.been.calledWith 'amqp://panda'
+
+        it 'should set max listeners on the channel', ->
+            client = new AmqpClient { connection: url: 'amqp://panda' }
+            client.channel.then (c) ->
+                c.setMaxListeners.should.have.been.called
 
     describe '.exchange()', ->
         client = undefined
