@@ -7,8 +7,16 @@ AMQP as Promised
 ![Build Status](https://ci2.tt.se/buildStatus/icon\?job\=ttab/amqp-as-promised/master)
 
 A high-level [promise-based](https://github.com/kriskowal/q) API built on
-[node-amqp](https://github.com/postwait/node-amqp), extended with
-functions for AMQP-based RPC.
+[`amqplib`](https://www.npmjs.com/package/amqplib)
+extended with functions for AMQP-based RPC.
+
+* [`amqplib` API docs][amqplib-api-docs]
+* Old versions of this package were based on [node-amqp][npm-node-amqp].
+
+  [amqplib-api-docs]: (http://www.squaremobius.net/amqp.node/channel_api.html)
+  [npm-node-amqp]: https://github.com/postwait/node-amqp
+
+## Table of contents
 
  * [Configuration](#configuration)
  * [Examples](#examples)
@@ -260,7 +268,7 @@ See [`queue.*`](#the-queue-object) below.
 Shorthand for
 
 1. If `exchange` is a string, then look up the existing exchange with
-   that name. 
+   that name.
 2. If `queue` is a string, then look up the existing queue with that name.
 3. Bind queue to `exchange/topic`.
 4. Subscribe `callback` to queue (optional).
@@ -271,8 +279,8 @@ Shorthand for
    exchange
  * `queue` - a queue object or a string with the name of a queue
  * `topic` - a string with the topic name.
- * `callback` - a function that takes the arguments `(msg, headers,
-   deliveryinfo)`.
+ * `callback` - see `queue.subscribe` below.
+
 
 ### `amqpc.shutdown()`
 
@@ -305,6 +313,12 @@ Unbinds the queue (if currently bound).
 Subscribes the callback to this queue. Will unsubscribe any previous
 callback. If opts is omitted, defaults to `ack: false, prefetchCount: 1`
 
+The callback will be called with arguments `(msg, headers, deliveryinfo,
+actions)`, where `actions` is an object that holds these methods:
+
+  * `acknowledge()`: returns a Promise to acknowledge the message. This is
+    only relevant if `opts.ack` is false (which is the default).
+  
 ### `queue.unsubscribe()`
 
 Unsubscribes current callback (if any).
