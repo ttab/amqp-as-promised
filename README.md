@@ -315,10 +315,10 @@ callback. If opts is omitted, defaults to `ack: false, prefetchCount: 1`
 
 The callback will be called with arguments `(msg, headers, deliveryinfo,
 actions)`, where `actions` is an object that holds these methods:
-  * `acknowledge()`: Ack the message. Returns a promise.
-    (:TODO: What's that promise for? Sending the ack? Receiving an ack-ack?)
 
-
+  * `acknowledge()`: returns a Promise to acknowledge the message. This is
+    only relevant if `opts.ack` is false (which is the default).
+  
 ### `queue.unsubscribe()`
 
 Unsubscribes current callback (if any).
