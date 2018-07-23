@@ -10,27 +10,29 @@ module.exports = class AmqpClient
     constructor: (@conf, @compat=require('./compat-node-amqp')) ->
         [ uri, opts ] = @compat.connection(@conf)
         log.info "connecting to:", uri
-        reconnect = => amqp.connect(uri, opts).then (conn) =>
-            conn.on 'error', (err) =>
-                return if @_shuttingDown
-                log.warn 'amqp error:', (if err.message then err.message else err)
-                if typeof @conf?.errorHandler is 'function'
-                    @conf.errorHandler err
+        reconnect = =>
+            return if @_shuttingDown
+            amqp.connect(uri, opts).then (conn) =>
+                @conn = conn
+                conn.on 'error', (err) =>
+                    log.warn 'amqp error:', (if err.message then err.message else err)
+                    if typeof @conf?.errorHandler is 'function'
+                        @conf.errorHandler err
+                    else
+                        throw err
+                conn.createChannel().then (c) =>
+                    # set max listeners to something arbitrarily large in
+                    # order to avoid misleading 'memory leak' error messages
+                    c.setMaxListeners @conf.maxListeners or 1000
+                    c
+            .catch (err) =>
+                if @conf.waitForConnection
+                    log.info "waiting for connection to:", uri
+                    time = @conf.waitForConnection
+                    time = 1000 if typeof time != 'number'
+                    wait(time).then reconnect
                 else
                     throw err
-            conn.createChannel().then (c) =>
-                # set max listeners to something arbitrarily large in
-                # order to avoid misleading 'memory leak' error messages
-                c.setMaxListeners @conf.maxListeners or 1000
-                c
-        .catch (err) =>
-            if @conf.waitForConnection
-                log.info "waiting for connection to:", uri
-                time = @conf.waitForConnection
-                time = 1000 if typeof time != 'number'
-                wait(time).then reconnect
-            else
-                throw err
         @channel = reconnect()
         @exchanges = {}
         @queues = {}
@@ -101,10 +103,6 @@ module.exports = class AmqpClient
 
     unbind: (queue) => @compat.promise(@_unbind queue)
 
-    _shutdown: =>
-        @channel.then (c) ->
-            c.close()
-
     shutdown: =>
         @_shuttingDown = true
-        @compat.promise(@_shutdown())
+        @compat.promise(@conn.close())
