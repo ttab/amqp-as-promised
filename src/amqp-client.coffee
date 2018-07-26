@@ -7,40 +7,43 @@ wait = (time) -> new Promise (rs) -> setTimeout rs, time
 
 module.exports = class AmqpClient
 
-    constructor: (@conf, @compat=require('./compat-node-amqp')) ->
-        [ uri, opts ] = @compat.connection(@conf)
-        log.info "connecting to:", uri
-        reconnect = =>
-            return if @_shuttingDown
-            amqp.connect(uri, opts).then (conn) =>
-                @conn = conn
-                conn.on 'error', (err) =>
-                    log.warn 'amqp error:', (if err.message then err.message else err)
-                    if typeof @conf?.errorHandler is 'function'
-                        @conf.errorHandler err
-                    else
-                        throw err
-                conn.createChannel().then (c) =>
-                    # set max listeners to something arbitrarily large in
-                    # order to avoid misleading 'memory leak' error messages
-                    c.setMaxListeners @conf.maxListeners or 1000
-                    c
-            .catch (err) =>
-                if @conf.waitForConnection
-                    log.info "waiting for connection to:", uri
-                    time = @conf.waitForConnection
-                    time = 1000 if typeof time != 'number'
-                    wait(time).then reconnect
-                else
-                    throw err
-        @channel = reconnect()
+    constructor: (@conf, @compat = require('./compat-node-amqp')) ->
         @exchanges = {}
         @queues = {}
 
+    connect: =>
+        [ uri, opts ] = @compat.connection(@conf)
+        log.info "connecting to:", uri
+
+        amqp.connect(uri, opts).then (@conn) =>
+            log.info "connected"
+            @conn.on 'error', (err) =>
+                log.warn 'amqp error:', (if err.message then err.message else err)
+                if typeof @conf?.errorHandler is 'function'
+                    @conf.errorHandler err
+                else
+                    throw err
+            return Promise.resolve("ok")
+        .catch (err) =>
+            if @conf.waitForConnection
+                time = @conf.waitForConnection
+                time = 1000 if typeof time != 'number'
+                log.info "waiting for connection to:", uri
+                wait(time).then => @connect(uri, opts)
+            else
+                Promise.reject(err)
+
+    getChannel: =>
+        @conn.createChannel().then (c) =>
+            # set max listeners to something arbitrarily large in
+            # order to avoid misleading 'memory leak' error messages
+            c.setMaxListeners @conf.maxListeners or 1000
+            Promise.resolve(c)
+
     _exchange: (name, type, opts) =>
-        return Promise.resolve(name) if name instanceof ExchangeWrapper
+        return name if name instanceof ExchangeWrapper
         return @exchanges[name] if @exchanges[name]
-        @exchanges[name] = @channel.then (c) =>
+        @getChannel().then (c) =>
             (if not type
                 if name is ''
                     Promise.resolve({ exchange: '' })
@@ -50,7 +53,7 @@ module.exports = class AmqpClient
                 c.assertExchange(name, type, opts)
             ).then (e) =>
                 log.info 'exchange ready:', e.exchange
-                new ExchangeWrapper @, e
+                @exchanges[name] = new ExchangeWrapper @, e
 
     exchange: =>
         [ name, type, opts ] = @compat.exchangeArgs arguments...
@@ -64,14 +67,15 @@ module.exports = class AmqpClient
         qname = '' if !qname
         opts = opts ? if qname == '' then { exclusive: true }
         return @queues[qname] if @queues[qname] and qname isnt ''
-        @queues[qname] = @channel.then (c) =>
+
+        @getChannel().then (c) =>
             (if not opts
                 c.checkQueue(qname)
             else
                 c.assertQueue(qname, opts)
             ).then (q) =>
                 log.info 'queue created:', q.queue
-                new QueueWrapper @, q
+                @queues[qname] = new QueueWrapper @, q, c
 
     queue: =>
         [ qname, opts ] = @compat.queueArgs.apply(undefined, arguments)
@@ -104,5 +108,5 @@ module.exports = class AmqpClient
     unbind: (queue) => @compat.promise(@_unbind queue)
 
     shutdown: =>
-        @_shuttingDown = true
-        @compat.promise(@conn.close())
+        #@_shuttingDown = true
+        @compat.promise(@conn?.close())

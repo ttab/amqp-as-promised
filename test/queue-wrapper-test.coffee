@@ -14,11 +14,11 @@ describe 'QueueWrapper', ->
             bindQueue: stub().returns Promise.resolve()
             unbindQueue: stub().returns Promise.resolve()
         client =
-            channel: Promise.resolve(channel)
+            getChannel: Promise.resolve(channel)
             compat: require '../src/compat-node-amqp'
             exchange: stub().returns Promise.resolve exchange
         _queue = { queue: 'pandas' }
-        queue = new QueueWrapper client, _queue
+        queue = new QueueWrapper client, _queue, channel
         spy queue, 'bind'
 
     it 'should take its name from the underlying queue', ->

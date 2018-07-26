@@ -2,7 +2,10 @@
 describe 'Index', ->
     amqpc = Rpc = index = bog = undefined
     beforeEach ->
-        amqpc = stub().returns {}
+        amqpc = stub().returns {
+            connect: ->
+                Promise.resolve("ok")
+        }
         Rpc   = spy()
         bog   = level: spy()
         index = proxyquire '../src/index', {
@@ -27,7 +30,6 @@ describe 'Index', ->
                 timeout: 1234
         index cfg
         amqpc.should.have.been.calledWith cfg
-        Rpc.should.have.been.calledWith match.object, { timeout: 1234 }
 
     it 'should support old-style config', ->
         cfg =
@@ -35,7 +37,6 @@ describe 'Index', ->
             vhost: 'vhost'
         index cfg
         amqpc.should.have.been.calledWith { connection: { host: 'host', vhost: 'vhost' } }
-        Rpc.should.have.been.calledWith match.object
 
     it 'exposes RpcError', ->
         index.should.have.property 'RpcError'
