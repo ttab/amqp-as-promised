@@ -8,10 +8,9 @@ describe 'ExchangeWrapper', ->
         channel = new EventEmitter
         channel.publish = stub().returns true
         client =
-            channel: Promise.resolve(channel)
             compat: require '../src/compat-node-amqp'
         _exchange = { exchange: 'panda' }
-        exchange = new ExchangeWrapper client, _exchange
+        exchange = new ExchangeWrapper client, _exchange, channel
 
     describe '.publish()', ->
 

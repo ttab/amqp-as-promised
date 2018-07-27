@@ -17,9 +17,11 @@ module.exports = class Rpc
     returnChannel: =>
         if !@_returnChannel
             @_returnChannel = @client.queue('', { autoDelete: true, exclusive: true})
+            console.log "RPC RETURNCHANNEL"
             @_returnChannel.then (q) =>
                 q.subscribe (msg, headers, deliveryInfo) =>
                     @resolveResponse deliveryInfo?.correlationId, msg, headers
+
         return @_returnChannel
 
     registerResponse: (corrId, options={}, deserialize=require('./error-deserializer')) =>
@@ -34,6 +36,7 @@ module.exports = class Rpc
     resolveResponse: (corrId, msg, headers) =>
         if response = @responses.get corrId
             [ct, p] = decompress msg, headers
+            console.log "RPC resolveResponse"
             p.then (payload) =>
                 @responses.remove corrId
                 response.def.resolve response.deserialize payload
@@ -42,6 +45,7 @@ module.exports = class Rpc
 
     _rpc: (exchange, routingKey, msg, headers, options) =>
         throw new Error 'Must provide msg' unless msg
+        console.log "RPC _rpc"
         Promise.all([
             @client.exchange(exchange)
             @returnChannel()
@@ -75,11 +79,11 @@ module.exports = class Rpc
             merge opts.headers, h
 
             # wait for (maybe) compressed payload and then publish
+            console.log "RPC P"
             p.then (payload) ->
-                ex.publish routingKey, payload, opts
-            .then ->
-                # promise for rpc return
-                def.promise
+                ex.publish(routingKey, payload, opts).then ->
+                    # promise for rpc return
+                    def.promise
 
     rpc: (exchange, routingKey, msg, headers, options) =>
         @client.compat.promise(@_rpc exchange, routingKey, msg, headers, options)

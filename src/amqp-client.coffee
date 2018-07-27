@@ -39,6 +39,8 @@ module.exports = class AmqpClient
             # order to avoid misleading 'memory leak' error messages
             c.setMaxListeners @conf.maxListeners or 1000
             Promise.resolve(c)
+        .catch (err) ->
+            Promise.reject(err)
 
     _exchange: (name, type, opts) =>
         return name if name instanceof ExchangeWrapper
@@ -53,7 +55,10 @@ module.exports = class AmqpClient
                 c.assertExchange(name, type, opts)
             ).then (e) =>
                 log.info 'exchange ready:', e.exchange
-                @exchanges[name] = new ExchangeWrapper @, e
+                @exchanges[name] = new ExchangeWrapper @, e, c
+        .catch (err) ->
+            log.error "_echange error", err
+            Promise.reject(err)
 
     exchange: =>
         [ name, type, opts ] = @compat.exchangeArgs arguments...
@@ -76,6 +81,10 @@ module.exports = class AmqpClient
             ).then (q) =>
                 log.info 'queue created:', q.queue
                 @queues[qname] = new QueueWrapper @, q, c
+        .catch (err) ->
+            log.error "_queue error", err
+            Promise.reject(err)
+
 
     queue: =>
         [ qname, opts ] = @compat.queueArgs.apply(undefined, arguments)
@@ -93,6 +102,10 @@ module.exports = class AmqpClient
                 q.subscribe callback if callback?
             .then ->
                 return q.name
+        .catch (err) ->
+            log.error "_bind error", err
+            Promise.reject(err)
+
 
     bind: (exchange, queue, topic, callback) =>
         @compat.promise(@_bind exchange, queue, topic, callback)

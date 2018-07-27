@@ -24,12 +24,10 @@ describe 'node-ampq compatibility', ->
         beforeEach ->
             channel =
                 ack: stub().returns Promise.resolve()
-            client =
-                channel: Promise.resolve channel
 
         it 'should deserialize the payload if it is text/json', ->
             cb = spy()
-            compat.callback(client, cb)
+            compat.callback(channel, cb)
                 properties: { contentType: 'text/json' }
                 fields: {}
                 content: new Buffer('{"hello": "world"}')
@@ -37,7 +35,7 @@ describe 'node-ampq compatibility', ->
 
         it 'should deserialize the payload if it is application/json', ->
             cb = spy()
-            compat.callback(client, cb)
+            compat.callback(channel, cb)
                 properties: { contentType: 'application/json' }
                 fields: {}
                 content: new Buffer('{"hello": "world"}')
@@ -46,7 +44,7 @@ describe 'node-ampq compatibility', ->
         it 'should handle other content types', ->
             cb = spy()
             buf = new Buffer('hello, world')
-            compat.callback(client, cb)
+            compat.callback(channel, cb)
                 properties: { contentType: 'application/octet-stream' }
                 fields: {}
                 content: buf
@@ -55,7 +53,7 @@ describe 'node-ampq compatibility', ->
         it 'should handle text/plain like regular payloads', ->
             cb = spy()
             buf = new Buffer('hello, world')
-            compat.callback(client, cb)
+            compat.callback(channel, cb)
                 properties: { contentType: 'text/plain' }
                 fields: {}
                 content: buf
@@ -67,7 +65,7 @@ describe 'node-ampq compatibility', ->
                 fields: {}
                 content: new Buffer('panda')
             cb = spy()
-            compat.callback(client, cb) data
+            compat.callback(channel, cb) data
             cb.should.have.been.calledWith match.any, match.object, match.object, match acknowledge: match.func
             cb.firstCall.args[3].acknowledge()
             .then ->

@@ -6,6 +6,7 @@ module.exports = class QueueWrapper
         @name = @queue.queue
 
     _bind: (exchange, topic) =>
+        console.log "QW _bind"
         topic = '' if not topic
         Promise.resolve().then =>
             throw new Error('Topic is not a string') if typeof topic != 'string'
@@ -20,11 +21,17 @@ module.exports = class QueueWrapper
                 @_topic = topic
                 log.info 'queue bound:', @name, @_topic
                 @
+        .catch (err) ->
+            log.error "qw _bind error", err
+            Promise.reject(err)
+
 
     bind: (exchange, topic) =>
+        console.log "QW bind"
         @client.compat.promise(@_bind exchange, topic)
 
     _unbind: =>
+        console.log "QW _unbind"
         return Promise.resolve @ unless @_exchange and @_topic
 
         @channel.unbindQueue @name, @_exchange, @_topic
@@ -33,10 +40,16 @@ module.exports = class QueueWrapper
             delete @_exchange
             delete @_topic
             @
+        .catch (err) ->
+            log.error "qw _unbind error", err
+            Promise.reject(err)
 
-    unbind: => @client.compat.promise(@_unbind())
+    unbind: =>
+        console.log "unbind"
+        @client.compat.promise(@_unbind())
 
     _subscribe: (opts, callback) =>
+        console.log "_subscribe"
         if typeof opts == 'function'
             callback = opts
             opts = null
@@ -46,20 +59,28 @@ module.exports = class QueueWrapper
             # but there is no other way to do it
             Promise.all([
                 @channel.prefetch opts.prefetch
-                @channel.consume @queue.queue, @client.compat.callback(@client, callback), opts
+                @channel.consume @queue.queue, @client.compat.callback(@channel, callback), opts
             ]).then ([whatevs, { consumerTag }]) =>
                 @_consumerTag = consumerTag
                 @
+        .catch (err) ->
+            log.error "qw _subscribe error", err
+            Promise.reject(err)
+
 
     subscribe: (opts, callback) =>
+        console.log "subscribe"
         @client.compat.promise(@_subscribe opts, callback)
 
     _unsubscribe: =>
-        return Promise.resolve @ unless @_consumerTag
+        console.log "qw unsub channel", @channel?
+        return @ unless @_consumerTag
         @channel.cancel(@_consumerTag).then =>
             log.info 'unsubscribed:', @name, @_consumerTag
             delete @_consumerTag
             @
+        .catch (err) ->
+            log.error "qw _unsub error", err
 
     unsubscribe: => @client.compat.promise(@_unsubscribe())
 

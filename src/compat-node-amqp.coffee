@@ -44,7 +44,7 @@ module.exports =
         exclusive : opts?.exclusive
         prefetch  : if opts?.prefetchCount? then opts.prefetchCount else 1
 
-    callback: (client, cb) ->
+    callback: (channel, cb) ->
         (data) ->
             headers = data.properties?.headers or {}
             info =
@@ -73,6 +73,7 @@ module.exports =
                 { data: data.content, contentType: info.contentType }
 
             ack = acknowledge: ->
-                client.channel.then (c)-> c.ack data
+                console.log "COMPAT callback"
+                channel.ack data
 
             cb content, headers, info, ack
