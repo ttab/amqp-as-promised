@@ -1,7 +1,7 @@
 {
   "name": "amqp-as-promised",
   "description": "A promise-based AMQP API build on node-amqp",
-  "version": "4.2.0",
+  "version": "5.0.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/ttab/amqp-as-promised"
