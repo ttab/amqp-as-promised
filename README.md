@@ -27,9 +27,15 @@ extended with functions for AMQP-based RPC.
    * [RPC functions](#rpc-functions)
  * [Changelog](CHANGELOG.md)
 
-## A note on version 3.0
+## Version Notes
 
-As of version 3.0, the underlying amqp library has changed from
+#### 5.0
+
+Syntax to access the library has been changed in 5.0 to improve connection management. See the [Running](#running)-section for instructions.
+
+#### 3.0
+
+The underlying amqp library was changed from
 `node-amqp` to `amqplib`. Efforts have been made to keep everything as
 backwards compatible as possible, but some things have changed:
 
@@ -45,8 +51,17 @@ backwards compatible as possible, but some things have changed:
 
 ## Running
 
+5.0+
+```coffee
+    conf = require './myconf.json' # see example conf below
+    ((require 'amqp-as-promised') conf.amqp).then (amqpc) ->
+```
+
+Earlier versions
+```coffee
     conf = require './myconf.json' # see example conf below
     amqpc = (require 'amqp-as-promised') conf.amqp
+```
 
 ## Configuration
 
@@ -318,7 +333,7 @@ actions)`, where `actions` is an object that holds these methods:
 
   * `acknowledge()`: returns a Promise to acknowledge the message. This is
     only relevant if `opts.ack` is false (which is the default).
-  
+
 ### `queue.unsubscribe()`
 
 Unsubscribes current callback (if any).

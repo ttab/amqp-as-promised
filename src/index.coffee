@@ -11,8 +11,7 @@ module.exports = (conf = {}) -> new Promise (resolve, reject) ->
     # support old-style configuration
     conf = { connection: conf } if not conf.connection
 
-    client     = new AmqpClient(conf)
-
+    client = new AmqpClient(conf)
     client.connect().then =>
         rpc        = new Rpc client, conf.rpc
         rpcBackend = new RpcBackend client
