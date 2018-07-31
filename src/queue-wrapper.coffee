@@ -6,7 +6,6 @@ module.exports = class QueueWrapper
         @name = @queue.queue
 
     _bind: (exchange, topic) =>
-        console.log "QW _bind"
         topic = '' if not topic
         Promise.resolve().then =>
             throw new Error('Topic is not a string') if typeof topic != 'string'
@@ -27,11 +26,9 @@ module.exports = class QueueWrapper
 
 
     bind: (exchange, topic) =>
-        console.log "QW bind"
         @client.compat.promise(@_bind exchange, topic)
 
     _unbind: =>
-        console.log "QW _unbind"
         return Promise.resolve @ unless @_exchange and @_topic
 
         @channel.unbindQueue @name, @_exchange, @_topic
@@ -45,11 +42,9 @@ module.exports = class QueueWrapper
             Promise.reject(err)
 
     unbind: =>
-        console.log "unbind"
         @client.compat.promise(@_unbind())
 
     _subscribe: (opts, callback) =>
-        console.log "_subscribe"
         if typeof opts == 'function'
             callback = opts
             opts = null
@@ -69,11 +64,9 @@ module.exports = class QueueWrapper
 
 
     subscribe: (opts, callback) =>
-        console.log "subscribe"
         @client.compat.promise(@_subscribe opts, callback)
 
     _unsubscribe: =>
-        console.log "qw unsub channel", @channel?
         return @ unless @_consumerTag
         @channel.cancel(@_consumerTag).then =>
             log.info 'unsubscribed:', @name, @_consumerTag

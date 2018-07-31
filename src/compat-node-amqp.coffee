@@ -73,7 +73,6 @@ module.exports =
                 { data: data.content, contentType: info.contentType }
 
             ack = acknowledge: ->
-                console.log "COMPAT callback"
                 channel.ack data
 
             cb content, headers, info, ack

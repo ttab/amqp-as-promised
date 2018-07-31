@@ -25,7 +25,7 @@ module.exports = class RpcBackend
             callback = opts
             opts = null
         opts = opts ? {}
-        console.log "RPCBACK serve"
+
         Promise.all( [
             @client.exchange exname, { type: 'topic', durable: true, autoDelete: false}
             @client.exchange ''
@@ -33,8 +33,6 @@ module.exports = class RpcBackend
         ]).then ([ex, defaultex, queue]) =>
             queue.bind ex, topic
             queue.subscribe opts, @_mkcallback(defaultex, callback, opts)
-        .catch (err) ->
-            console.log "serve", err?.stack
 
     # Creates a callback funtion which respects replyTo/correlationId
     _mkcallback: (exchange, handler, subopts, serializeError=require('./error-serializer')) ->
@@ -65,7 +63,6 @@ module.exports = class RpcBackend
             [ct, p] = decompress msg, headers
             merge info, ct
 
-            console.log "RPCBACK _mkcallback"
             p.then (payload) ->
                 Promise.resolve handler payload, headers, info
             .then (res) ->
