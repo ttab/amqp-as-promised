@@ -27,3 +27,7 @@ describe 'ExchangeWrapper', ->
             channel.publish.returns false
             setTimeout (-> channel.emit 'drain'), 100
             exchange.publish 'cub', new Buffer('panda')
+
+        it 'rejects publish if client is shutting down', ->
+            client.shuttingDown = true
+            exchange.publish('cub', new Buffer('panda')).should.eventually.be.rejected

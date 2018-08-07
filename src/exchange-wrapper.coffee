@@ -10,5 +10,6 @@ module.exports = class ExchangeWrapper
             @channel.once 'drain', -> {}
 
     publish: (routingKey, message, options={}) =>
+        return Promise.reject("amqp connection is closing") if @client.shuttingDown
         [ routingKey, message, options ] = @client.compat.publishArgs(routingKey, message, options)
         @client.compat.promise(@_publish routingKey, message, options)

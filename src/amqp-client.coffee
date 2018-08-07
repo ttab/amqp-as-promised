@@ -121,5 +121,5 @@ module.exports = class AmqpClient
     unbind: (queue) => @compat.promise(@_unbind queue)
 
     shutdown: =>
-        #@_shuttingDown = true
+        @shuttingDown = true
         @compat.promise(@conn?.close())
