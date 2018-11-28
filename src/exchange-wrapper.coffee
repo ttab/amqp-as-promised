@@ -4,10 +4,11 @@ module.exports = class ExchangeWrapper
         @name = @exchange.exchange
 
     _publish: (routingKey, message, options) =>
-        if @channel.publish @name, routingKey, message, options
-            return {}
-        else
-            @channel.once 'drain', -> {}
+        new Promise (rs, rj) =>
+            if @channel.publish @name, routingKey, message, options
+                return rs {}
+            else
+                @channel.once 'drain', -> rs {}
 
     publish: (routingKey, message, options={}) =>
         return Promise.reject("amqp connection is closing") if @client.shuttingDown

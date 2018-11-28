@@ -22,11 +22,13 @@ describe 'ExchangeWrapper', ->
 
         it 'resolves the promise immediately if the write buffer is not full', ->
             exchange.publish 'cub', new Buffer('panda')
+            .should.eventually.eql {}
 
         it 'waits for drain if the write buffer is full', ->
             channel.publish.returns false
             setTimeout (-> channel.emit 'drain'), 100
             exchange.publish 'cub', new Buffer('panda')
+            .should.eventually.eql {}
 
         it 'rejects publish if client is shutting down', ->
             client.shuttingDown = true
