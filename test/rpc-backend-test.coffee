@@ -41,7 +41,7 @@ describe 'RpcBackend', ->
             callback = rpc._mkcallback exchange, handler
 
         it 'should return callback function', ->
-            callback.should.be.a.func
+            callback.should.be.a 'function'
 
         it 'when invoked, the callback should in turn invoke the actual handler with msg and headers', ->
             callback 'msg', { hello: 'world' }, { correlationId: '1234', replyTo: 'reply'}
@@ -88,7 +88,7 @@ describe 'RpcBackend', ->
         inlineCallback  = rpc._mkcallback exchange, inlineHandler
 
         it 'should return callback function', ->
-            inlineCallback.should.be.a.func
+            inlineCallback.should.be.a 'function'
 
         inlineCallback  'msg', { hello: 'world' }, { correlationId: '4321', replyTo: 'reply'}
 
