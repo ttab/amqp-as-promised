@@ -10,12 +10,15 @@
   "scripts": {
     "test": "mocha",
     "lint": "coffeelint src",
-    "prepublish": "coffee -o lib -c src"
+    "prepare": "coffee -o lib -c src"
   },
   "keywords": [
     "amqp",
     "promises",
     "q"
+  ],
+  "files": [
+    "**/*.js"
   ],
   "author": "Martin Algesten <martin@algesten.se>",
   "contributors": [
