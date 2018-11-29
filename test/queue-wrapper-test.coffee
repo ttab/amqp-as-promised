@@ -65,7 +65,7 @@ describe 'QueueWrapper', ->
                         contentType: 'application/octet-stream'
                     fields:
                         routingKey: 'cub'
-                    content: new Buffer('{"panda": true}')
+                    content: Buffer.from('{"panda": true}')
                 }
                 cb.should.have.been.calledWith \
                     match { data: match.instanceOf(Buffer), contentType: 'application/octet-stream' },
@@ -81,7 +81,7 @@ describe 'QueueWrapper', ->
                     properties:
                         contentType: 'application/json'
                     fields: {}
-                    content: new Buffer('{"panda": true}')
+                    content: Buffer.from('{"panda": true}')
                 }
                 cb.should.have.been.calledWith { panda: true }, {},
                     match { contentType: 'application/json' }

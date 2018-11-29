@@ -15,21 +15,21 @@ describe 'ExchangeWrapper', ->
     describe '.publish()', ->
 
         it 'should publish the message', ->
-            exchange.publish 'cub', new Buffer('panda')
+            exchange.publish 'cub', Buffer.from('panda')
             .then ->
                 channel.publish.should.have.been.calledWith 'panda', 'cub', match.instanceOf(Buffer), match
                     contentType: 'application/octet-stream'
 
         it 'resolves the promise immediately if the write buffer is not full', ->
-            exchange.publish 'cub', new Buffer('panda')
+            exchange.publish 'cub', Buffer.from('panda')
             .should.eventually.eql {}
 
         it 'waits for drain if the write buffer is full', ->
             channel.publish.returns false
             setTimeout (-> channel.emit 'drain'), 100
-            exchange.publish 'cub', new Buffer('panda')
+            exchange.publish 'cub', Buffer.from('panda')
             .should.eventually.eql {}
 
         it 'rejects publish if client is shutting down', ->
             client.shuttingDown = true
-            exchange.publish('cub', new Buffer('panda')).should.eventually.be.rejected
+            exchange.publish('cub', Buffer.from('panda')).should.eventually.be.rejected

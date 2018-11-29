@@ -94,20 +94,20 @@ describe 'Rpc', ->
 
             it 'decompresses/deserializes object', ->
                 def = rpc.registerResponse '1234'
-                buf = gzipSync Buffer JSON.stringify panda:42
+                buf = gzipSync Buffer.from JSON.stringify panda:42
                 rpc.resolveResponse '1234', buf, compress:'json'
                 def.promise.then (res) ->
                     res.should.eql panda:42
 
             it 'rejects failed decompression', ->
                 def = rpc.registerResponse '1234'
-                buf = Buffer('so wrong') # this is not valid gzip
+                buf = Buffer.from('so wrong') # this is not valid gzip
                 rpc.resolveResponse '1234', buf, compress:'json'
                 def.promise.should.eventually.be.rejectedWith 'incorrect header check'
 
             it 'rejects failed deserialization', ->
                 def = rpc.registerResponse '1234'
-                buf = gzipSync Buffer('so wrong') # this is not valid json
+                buf = gzipSync Buffer.from('so wrong') # this is not valid json
                 rpc.resolveResponse '1234', buf, compress:'json'
                 def.promise.should.eventually.be.rejectedWith 'Unexpected token s'
 
@@ -115,7 +115,7 @@ describe 'Rpc', ->
 
             it 'decompresses buffer', ->
                 def = rpc.registerResponse '1234'
-                buf = gzipSync Buffer('panda')
+                buf = gzipSync Buffer.from('panda')
                 rpc.resolveResponse '1234', buf, compress:'buffer'
                 def.promise.then (res) ->
                     res.toString().should.eql 'panda'
@@ -257,7 +257,7 @@ describe 'Rpc', ->
             describe 'and buffer', ->
 
                 it 'should publish compressed buffer and set compress header', ->
-                    rpc.rpc 'hello', 'world', Buffer('panda'), null, compress:true
+                    rpc.rpc 'hello', 'world', Buffer.from('panda'), null, compress:true
                     .then ->
                         [routingKey, buf, opts] = exchange.publish.args[0]
                         routingKey.should.eql 'world'

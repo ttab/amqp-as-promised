@@ -30,7 +30,7 @@ describe 'node-ampq compatibility', ->
             compat.callback(channel, cb)
                 properties: { contentType: 'text/json' }
                 fields: {}
-                content: new Buffer('{"hello": "world"}')
+                content: Buffer.from('{"hello": "world"}')
             cb.should.have.been.calledWith { 'hello': 'world' }, match.object, match.object
 
         it 'should deserialize the payload if it is application/json', ->
@@ -38,12 +38,12 @@ describe 'node-ampq compatibility', ->
             compat.callback(channel, cb)
                 properties: { contentType: 'application/json' }
                 fields: {}
-                content: new Buffer('{"hello": "world"}')
+                content: Buffer.from('{"hello": "world"}')
             cb.should.have.been.calledWith { 'hello': 'world' }, match.object, match.object
 
         it 'should handle other content types', ->
             cb = spy()
-            buf = new Buffer('hello, world')
+            buf = Buffer.from('hello, world')
             compat.callback(channel, cb)
                 properties: { contentType: 'application/octet-stream' }
                 fields: {}
@@ -52,7 +52,7 @@ describe 'node-ampq compatibility', ->
 
         it 'should handle text/plain like regular payloads', ->
             cb = spy()
-            buf = new Buffer('hello, world')
+            buf = Buffer.from('hello, world')
             compat.callback(channel, cb)
                 properties: { contentType: 'text/plain' }
                 fields: {}
@@ -63,7 +63,7 @@ describe 'node-ampq compatibility', ->
             data =
                 properties: { }
                 fields: {}
-                content: new Buffer('panda')
+                content: Buffer.from('panda')
             cb = spy()
             compat.callback(channel, cb) data
             cb.should.have.been.calledWith match.any, match.object, match.object, match acknowledge: match.func
@@ -111,7 +111,7 @@ describe 'node-ampq compatibility', ->
     describe '.publishArgs()', ->
 
         it 'should publish the message', ->
-            buf = new Buffer('panda')
+            buf = Buffer.from('panda')
             [ key, msg, opts ] = compat.publishArgs 'cub', buf, {}
             key.should.eql 'cub'
             msg.should.eql buf

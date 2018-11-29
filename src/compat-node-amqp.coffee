@@ -33,9 +33,9 @@ module.exports =
     publishArgs: (routingKey, message, options) ->
         options.contentType = 'application/octet-stream' unless options.contentType
         if typeof(message) is 'string'
-            message = new Buffer message
+            message = Buffer.from message
         if typeof(message) is 'object' and not (message instanceof Buffer)
-            message = new Buffer JSON.stringify message
+            message = Buffer.from JSON.stringify message
             options.contentType = 'application/json'
         [ routingKey, message, options ]
 

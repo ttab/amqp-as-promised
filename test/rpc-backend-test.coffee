@@ -108,12 +108,12 @@ describe 'RpcBackend', ->
             callback = rpc._mkcallback exchange, handler
 
         it 'should decompress/deserialize the json to the handler', ->
-            v = gzipSync Buffer JSON.stringify panda:42
+            v = gzipSync Buffer.from JSON.stringify panda:42
             callback(v, {compress:'json'}, replyTo:'123').then ->
                 handler.should.have.been.calledWith panda:42
 
         it 'should (json) compress the response from the handler', ->
-            v = gzipSync Buffer JSON.stringify panda:42
+            v = gzipSync Buffer.from JSON.stringify panda:42
             callback(v, {compress:'json'}, replyTo:'123').then ->
                 [routingKey, buf] = exchange.publish.args[0]
                 routingKey.should.eql '123'
@@ -121,9 +121,9 @@ describe 'RpcBackend', ->
                 JSON.parse(b2.toString()).should.eql return:'panda'
 
         it 'should compress the (buffer) response from the handler', ->
-            handler = stub().returns Promise.resolve().then -> Buffer('panda')
+            handler = stub().returns Promise.resolve().then -> Buffer.from('panda')
             callback = rpc._mkcallback exchange, handler
-            v = gzipSync Buffer JSON.stringify panda:42
+            v = gzipSync Buffer.from JSON.stringify panda:42
             callback(v, {compress:'json'}, replyTo:'123').then ->
                 [routingKey, buf] = exchange.publish.args[0]
                 routingKey.should.eql '123'
@@ -140,7 +140,7 @@ describe 'RpcBackend', ->
             callback = rpc._mkcallback exchange, handler
 
         it 'should decompress/deserialize the json to the handler', ->
-            v = gzipSync Buffer('panda')
+            v = gzipSync Buffer.from('panda')
             callback(v, {compress:'buffer'}, replyTo:'123').then ->
                 [buf, headers] = handler.args[0]
                 buf.toString().should.eql 'panda'

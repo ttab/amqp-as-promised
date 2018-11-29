@@ -12,7 +12,7 @@ compress = (msg, props) ->
         if Buffer.isBuffer(msg)
             [{compress:'buffer'}, comp msg]
         else
-            [{compress:'json'}, comp Buffer JSON.stringify msg]
+            [{compress:'json'}, comp Buffer.from JSON.stringify msg]
     else
         [null, Promise.resolve(msg)]
 

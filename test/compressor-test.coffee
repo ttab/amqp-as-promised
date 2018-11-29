@@ -14,7 +14,7 @@ describe 'compressor', ->
             wcomp({panda:42}, {compress:false}).should.eventually.eql [null, panda:42]
 
         it 'returns a compressed buffer and compress:buffer', ->
-            wcomp(Buffer('panda'), {compress:true}).then ([h, v]) ->
+            wcomp(Buffer.from('panda'), {compress:true}).then ([h, v]) ->
                 h.should.eql compress:'buffer'
                 Buffer.isBuffer(v).should.eql true
                 b = gunzipSync(v)
@@ -38,26 +38,26 @@ describe 'compressor', ->
             wdecomp({panda:42}, {compress:false}).should.eventually.eql [null, panda:42]
 
         it 'decompresses to buffer when compress=buffer', ->
-            p = gzipSync(Buffer 'panda')
+            p = gzipSync(Buffer.from 'panda')
             wdecomp(p, {compress:'buffer'}).then ([h, v]) ->
                 h.should.eql 'application/octet-stream'
                 Buffer.isBuffer(v).should.eql true
                 v.toString().should.eql 'panda'
 
         it 'decompresses to object when compress=json', ->
-            p = gzipSync Buffer JSON.stringify panda:42
+            p = gzipSync Buffer.from JSON.stringify panda:42
             wdecomp(p, {compress:'json'}).then ([h, v]) ->
                 h.should.eql 'application/json'
                 v.should.eql panda:42
 
         it 'fails on bad decompressions', ->
-            p = Buffer('not correct gzip')
+            p = Buffer.from('not correct gzip')
             wdecomp p, {compress:'buffer'}
             .catch (err) ->
                 err.toString().should.eql 'Error: incorrect header check'
 
         it 'fails on bad JSON deserialization', ->
-            p = gzipSync Buffer('not correct json')
+            p = gzipSync Buffer.from('not correct json')
             wdecomp p, {compress:'json'}
             .catch (err) ->
                 err.toString()[0...31].should.eql 'SyntaxError: Unexpected token o'
