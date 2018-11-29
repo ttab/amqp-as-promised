@@ -17,6 +17,7 @@ module.exports = (conf = {}) -> new Promise (resolve, reject) ->
         rpcBackend = new RpcBackend client
 
         return resolve({
+            on: client.on.bind(client)
             exchange: client.exchange
             queue: client.queue
             bind: client.bind

@@ -97,10 +97,11 @@ If true, means there will be no AMQP connection. Default: false
 
 ### `errorHandler`
 
-*Since 2.0.0* connection errors are rethrown to crash process.
+*Since 2.0.0* connection errors are rethrown to crash process. 
 
-* `errorHandler`: sets a handler function to receive the error instead of
-throwing to process.
+* `errorHandler`: sets a handler function to receive the error instead
+of throwing to process. This option is deprecated, as a better way to
+do this is to attach an `error` event handler.
 
 ### `waitForConnection`
 
@@ -134,6 +135,30 @@ Or with url:
         "logLevel": "warn"
     }
 
+
+Events
+=======
+
+Amqp-as-promised emits `error` events on unexpected network errors,
+for example then the connection to the server has been lost. It is up
+to the client to handle these errors, as amqp-as-promised doesn't
+reconnect automatically. Keep in mind that error recovery can be
+tricky, and the best option might be to just crash and restart the
+application on error.
+
+This is a simple but effective error handler:
+
+    amqpc.on 'error', (err) ->
+        console.log err
+        process.exit 1
+
+## Unhandled errors
+
+If there are no error handlers attached (either using `amqp.on()` or
+setting the `errorHandler` in the configuration), amqp-as-promised
+will as a last resort throw the error. This will most likely result in
+an application crash unless there is an uncaught exception handler set
+on the `process`.
 
 Examples
 ==========
@@ -259,6 +284,10 @@ API
 ===
 
 ## The `amqpc` object
+
+### `amqpc.on(event, handler)`
+
+Attach an event handler. Currently only `error` events are supported.
 
 ### `amqpc.exchange(name, opts)`
 
