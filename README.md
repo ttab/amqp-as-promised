@@ -6,14 +6,14 @@ AMQP as Promised
 ![Monthly downloads](http://img.shields.io/npm/dm/amqp-as-promised.svg) &nbsp;
 ![Build Status](https://ci2.tt.se/buildStatus/icon\?job\=ttab/amqp-as-promised/master)
 
-A high-level [promise-based](https://github.com/kriskowal/q) API built on
+A high-level [promise-based](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Using_promises) API built on
 [`amqplib`](https://www.npmjs.com/package/amqplib)
 extended with functions for AMQP-based RPC.
 
 * [`amqplib` API docs][amqplib-api-docs]
 * Old versions of this package were based on [node-amqp][npm-node-amqp].
 
-  [amqplib-api-docs]: (http://www.squaremobius.net/amqp.node/channel_api.html)
+  [amqplib-api-docs]: http://www.squaremobius.net/amqp.node/channel_api.html
   [npm-node-amqp]: https://github.com/postwait/node-amqp
 
 ## Table of contents
@@ -31,7 +31,9 @@ extended with functions for AMQP-based RPC.
 
 #### 5.0
 
-Syntax to access the library has been changed in 5.0 to improve connection management. See the [Running](#running)-section for instructions.
+Syntax to access the library has been changed in 5.0 to improve
+connection management. See the [Running](#running)-section for
+instructions.
 
 #### 3.0
 
@@ -123,6 +125,7 @@ do this is to attach an `error` event handler.
 
 Or with url:
 
+
     {
         "connection": {
             "url": "amqp://myuser:supersecret@192.168.0.10/test"
@@ -143,9 +146,11 @@ application on error.
 
 This is a simple but effective error handler:
 
-    amqpc.on 'error', (err) ->
-        console.log err
-        process.exit 1
+```coffee
+amqpc.on 'error', (err) ->
+    console.log err
+    process.exit 1
+```
 
 ## Unhandled errors
 
