@@ -24,7 +24,6 @@ module.exports = (conf = {}) -> new Promise (resolve, reject) ->
             rpc: rpc.rpc
             serve: rpcBackend.serve
             shutdown: client.shutdown
-            local: client.local
         })
     .catch (err) ->
         reject(err)

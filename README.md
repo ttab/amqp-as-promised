@@ -82,10 +82,6 @@ need to at minimum specify either
 or
 * `url`.
 
-### `local`
-
-If true, means there will be no AMQP connection. Default: false
-
 ### `rpc`
 
 * `timeout`: timeout in ms for rpc calls. Default: 1000ms
@@ -120,7 +116,6 @@ do this is to attach an `error` event handler.
             "password": "supersecret"
         },
         "logLevel": "warn",
-        "local": false,
         "rpc": {
             "timeout": 2000
         }
@@ -330,10 +325,6 @@ Shorthand for
 
 Will unbind all queues and unsubscribe all callbacks then gracefully
 shut down the socket connection.
-
-### `amqpc.local`
-
-Read only property that tells whether `conf.local` was true.
 
 ## The `exchange` object
 
