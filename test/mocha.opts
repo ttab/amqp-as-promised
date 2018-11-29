@@ -1,3 +1,4 @@
+--require coffee-script/register
 --reporter list
---compilers coffee:coffee-script/register
 --colors
+test/*.coffee

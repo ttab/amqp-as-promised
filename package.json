@@ -29,20 +29,20 @@
     "amqplib": "^0.4.2",
     "bog": "1",
     "lodash.clone": "^4.5.0",
-    "mem-cache": "0.0.4",
+    "mem-cache": "0.0.5",
     "uuid": "~2.0.1"
   },
   "devDependencies": {
     "@ttab/coffeescript-style": "^0.2.2",
-    "chai": "^3.5.0",
-    "chai-as-promised": "^6.0.0",
-    "chai-like": "^0.1.10",
+    "chai": "^4",
+    "chai-as-promised": "^7.0.0",
+    "chai-like": "^1",
     "coffee-script": "1.12.5",
-    "coffeelint": "^2.0.7",
+    "coffeelint": "^2.1.0",
     "mocha": "^5.2.0",
-    "mocha-jenkins-reporter": "^0.3.10",
-    "proxyquire": "^1.7.3",
-    "sinon": "^1.17.6",
-    "sinon-chai": "^2.8.0"
+    "mocha-jenkins-reporter": "^0.4",
+    "proxyquire": "^2",
+    "sinon": "^7",
+    "sinon-chai": "^3"
   }
 }
