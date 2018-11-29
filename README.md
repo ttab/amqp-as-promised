@@ -6,14 +6,14 @@ AMQP as Promised
 ![Monthly downloads](http://img.shields.io/npm/dm/amqp-as-promised.svg) &nbsp;
 ![Build Status](https://ci2.tt.se/buildStatus/icon\?job\=ttab/amqp-as-promised/master)
 
-A high-level [promise-based](https://github.com/kriskowal/q) API built on
+A high-level [promise-based](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Using_promises) API built on
 [`amqplib`](https://www.npmjs.com/package/amqplib)
 extended with functions for AMQP-based RPC.
 
 * [`amqplib` API docs][amqplib-api-docs]
 * Old versions of this package were based on [node-amqp][npm-node-amqp].
 
-  [amqplib-api-docs]: (http://www.squaremobius.net/amqp.node/channel_api.html)
+  [amqplib-api-docs]: http://www.squaremobius.net/amqp.node/channel_api.html
   [npm-node-amqp]: https://github.com/postwait/node-amqp
 
 ## Table of contents
@@ -31,7 +31,9 @@ extended with functions for AMQP-based RPC.
 
 #### 5.0
 
-Syntax to access the library has been changed in 5.0 to improve connection management. See the [Running](#running)-section for instructions.
+Syntax to access the library has been changed in 5.0 to improve
+connection management. See the [Running](#running)-section for
+instructions.
 
 #### 3.0
 
@@ -82,10 +84,6 @@ need to at minimum specify either
 or
 * `url`.
 
-### `local`
-
-If true, means there will be no AMQP connection. Default: false
-
 ### `rpc`
 
 * `timeout`: timeout in ms for rpc calls. Default: 1000ms
@@ -97,10 +95,11 @@ If true, means there will be no AMQP connection. Default: false
 
 ### `errorHandler`
 
-*Since 2.0.0* connection errors are rethrown to crash process.
+*Since 2.0.0* connection errors are rethrown to crash process. 
 
-* `errorHandler`: sets a handler function to receive the error instead of
-throwing to process.
+* `errorHandler`: sets a handler function to receive the error instead
+of throwing to process. This option is deprecated, as a better way to
+do this is to attach an `error` event handler.
 
 ### `waitForConnection`
 
@@ -119,13 +118,13 @@ throwing to process.
             "password": "supersecret"
         },
         "logLevel": "warn",
-        "local": false,
         "rpc": {
             "timeout": 2000
         }
     }
 
 Or with url:
+
 
     {
         "connection": {
@@ -134,6 +133,32 @@ Or with url:
         "logLevel": "warn"
     }
 
+
+Events
+=======
+
+Amqp-as-promised emits `error` events on unexpected network errors,
+for example then the connection to the server has been lost. It is up
+to the client to handle these errors, as amqp-as-promised doesn't
+reconnect automatically. Keep in mind that error recovery can be
+tricky, and the best option might be to just crash and restart the
+application on error.
+
+This is a simple but effective error handler:
+
+```coffee
+amqpc.on 'error', (err) ->
+    console.log err
+    process.exit 1
+```
+
+## Unhandled errors
+
+If there are no error handlers attached (either using `amqp.on()` or
+setting the `errorHandler` in the configuration), amqp-as-promised
+will as a last resort throw the error. This will most likely result in
+an application crash unless there is an uncaught exception handler set
+on the `process`.
 
 Examples
 ==========
@@ -260,6 +285,10 @@ API
 
 ## The `amqpc` object
 
+### `amqpc.on(event, handler)`
+
+Attach an event handler. Currently only `error` events are supported.
+
 ### `amqpc.exchange(name, opts)`
 
 A promise for an exchange. If `opts` is omitted, then `passive:true`
@@ -301,10 +330,6 @@ Shorthand for
 
 Will unbind all queues and unsubscribe all callbacks then gracefully
 shut down the socket connection.
-
-### `amqpc.local`
-
-Read only property that tells whether `conf.local` was true.
 
 ## The `exchange` object
 

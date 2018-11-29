@@ -1,6 +1,22 @@
 Changelog
 =========
 
+## 5.0.2 - 2018-11-29
+
+  * Bug fix: publish() didn't wait for the write buffer to drain.
+
+## 5.0.1 - 2018-08-07
+
+  * Bug fix: publish() didn't reject properly if the client was
+    shutting down.
+
+## 5.0.0 - 2018-07-31
+
+  * Improved shutdown handling. 
+  * Syntax to access the library has been changed to improve
+    connection management. See [Running](README.md#running) for
+    details.
+
 ## 4.2.0 - 2018-01-30
 
   * `setMaxListeners()` on the created channel in order to avoid

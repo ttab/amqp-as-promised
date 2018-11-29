@@ -17,13 +17,13 @@ module.exports = (conf = {}) -> new Promise (resolve, reject) ->
         rpcBackend = new RpcBackend client
 
         return resolve({
+            on: client.on.bind(client)
             exchange: client.exchange
             queue: client.queue
             bind: client.bind
             rpc: rpc.rpc
             serve: rpcBackend.serve
             shutdown: client.shutdown
-            local: client.local
         })
     .catch (err) ->
         reject(err)

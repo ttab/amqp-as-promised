@@ -1,15 +1,27 @@
 log             = require 'bog'
 amqp            = require 'amqplib'
+{EventEmitter}  = require 'events'
 ExchangeWrapper = require './exchange-wrapper'
 QueueWrapper    = require './queue-wrapper'
 
 wait = (time) -> new Promise (rs) -> setTimeout rs, time
 
-module.exports = class AmqpClient
+module.exports = class AmqpClient extends EventEmitter
 
     constructor: (@conf, @compat = require('./compat-node-amqp')) ->
         @exchanges = {}
         @queues = {}
+
+        # subscribe the error handler, if specified
+        if typeof @conf?.errorHandler is 'function'
+            @on 'error', @conf.errorHandler
+
+        # attach a fallback error listener. if there are no other
+        # listeners attached, we will throw an error and possibly
+        # crash the application if there are no errors attached to the
+        # process.
+        @on 'error', (err) =>
+            throw err if @listenerCount('error') is 1
 
     connect: =>
         [ uri, opts ] = @compat.connection(@conf)
@@ -17,12 +29,12 @@ module.exports = class AmqpClient
 
         amqp.connect(uri, opts).then (@conn) =>
             log.info "connected"
-            @conn.on 'error', (err) =>
-                log.warn 'amqp error:', (if err.message then err.message else err)
-                if typeof @conf?.errorHandler is 'function'
-                    @conf.errorHandler err
-                else
-                    throw err
+
+            # emit an error on connection 'close' event, unless we are
+            # shutting down
+            @conn.on 'close', (e) =>
+                @emit 'error', e unless @shuttingDown
+
             return Promise.resolve("ok")
         .catch (err) =>
             if @conf.waitForConnection
@@ -38,6 +50,12 @@ module.exports = class AmqpClient
             # set max listeners to something arbitrarily large in
             # order to avoid misleading 'memory leak' error messages
             c.setMaxListeners @conf.maxListeners or 1000
+
+            # emit an error on channel 'close' event, unless we are
+            # shutting down
+            c.on 'close', =>
+                @emit 'error', new Error 'Channel closed' unless @shuttingDown
+
             Promise.resolve(c)
         .catch (err) ->
             Promise.reject(err)
@@ -57,7 +75,7 @@ module.exports = class AmqpClient
                 log.info 'exchange ready:', e.exchange
                 @exchanges[name] = new ExchangeWrapper @, e, c
         .catch (err) ->
-            log.error "_echange error", err
+            log.error "_exchange error", err
             Promise.reject(err)
 
     exchange: =>
