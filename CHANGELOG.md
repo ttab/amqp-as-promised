@@ -1,6 +1,17 @@
 Changelog
 =========
 
+## 5.1.0 - 2018-11-30
+
+  * Bug fix: since 2.0 the intention has always been to throw an
+    exception on underlying connection errors. This has not worked
+    properly recently, making error handling hard. This release fixes
+    that.
+  * It is now possible to attach a proper event handler to listen to
+    `error` events.
+  * Stopped using `new Buffer()` in favor of `Buffer.from()`
+  * Dependencies have been updated, to avoid `npm audit` problems.
+  
 ## 5.0.2 - 2018-11-29
 
   * Bug fix: publish() didn't wait for the write buffer to drain.
