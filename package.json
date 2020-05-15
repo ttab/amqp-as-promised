@@ -7,6 +7,7 @@
     "url": "https://github.com/ttab/amqp-as-promised"
   },
   "main": "lib/index",
+  "types": "./amqp-as-promised.d.ts",
   "scripts": {
     "test": "mocha",
     "lint": "coffeelint src",
@@ -18,7 +19,8 @@
     "q"
   ],
   "files": [
-    "**/*.js"
+    "**/*.js",
+    "amqp-as-promised.d.ts"
   ],
   "author": "Martin Algesten <martin@algesten.se>",
   "contributors": [
