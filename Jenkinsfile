@@ -7,7 +7,7 @@ node {
     sh "git clean -d -f -x"
   }
 
-  docker.image('node:boron').inside {
+  docker.image('node:erbium').inside {
     stage('npm install') {
       sh 'npm install'
     }
