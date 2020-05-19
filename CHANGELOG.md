@@ -1,6 +1,10 @@
 Changelog
 =========
 
+# 5.2.0 - 2020-05-19
+
+  * Added TypeScript definitions.
+
 ## 5.1.0 - 2018-11-30
 
   * Bug fix: since 2.0 the intention has always been to throw an
