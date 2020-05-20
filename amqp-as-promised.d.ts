@@ -17,7 +17,6 @@ declare namespace amqp {
     }
 
     export interface AmqpClient {
-
         on(event: 'error', callback: (err: Error) => void): void;
         exchange(name: string, opts?: ExchangeOpts): Promise<Exchange>;
         queue<T>(name: string, opts?: QueueOpts): Promise<Queue<T>>;
@@ -26,6 +25,8 @@ declare namespace amqp {
         rpc<T>(exchange: string, routingKey: string, msg: object | Buffer, headers?: MessageHeaders, opts?: RpcOpts): Promise<T>;
         serve<T>(exchange: string, routingKey: string, opts: SubscribeOpts, callback: ServeCallback<T>): void;
         serve<T>(exchange: string, routingKey: string, callback: ServeCallback<T>): void;
+        bind<T>(exchange: string, topic: string, callback: SubscribeCallback<T>): Promise<void>;
+        bind<T>(exchange: string, queue: string, topic: string, callback: SubscribeCallback<T>): Promise<void>;
         shutdown(): Promise<void>;
     }
 
