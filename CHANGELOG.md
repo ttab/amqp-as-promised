@@ -1,7 +1,17 @@
 Changelog
 =========
 
-# 5.2.0 - 2020-05-19
+## 5.2.2 - 2020-07-07
+
+  * Bug fix: the `topic` argument for `exchange()` is optional. 
+  * Any method that accept an exhange or queue name string also
+    accepts an exchange or queue object, respectively.
+
+## 5.2.1 - 2020-05-20
+
+  * Added missing TypeScript definitions for `queue.bind()`
+
+## 5.2.0 - 2020-05-19
 
   * Added TypeScript definitions.
 
