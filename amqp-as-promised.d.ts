@@ -18,20 +18,20 @@ declare namespace amqp {
 
     export interface AmqpClient {
         on(event: 'error', callback: (err: Error) => void): void;
-        exchange(name: string, opts?: ExchangeOpts): Promise<Exchange>;
-        queue<T>(name: string, opts?: QueueOpts): Promise<Queue<T>>;
+        exchange(name: string | Exchange, opts?: ExchangeOpts): Promise<Exchange>;
+        queue<T>(name: string | Queue<T>, opts?: QueueOpts): Promise<Queue<T>>;
         queue<T>(opts: QueueOpts): Promise<Queue<T>>;
         queue<T>(): Promise<Queue<T>>;
-        rpc<T>(exchange: string, routingKey: string, msg: object | Buffer, headers?: MessageHeaders, opts?: RpcOpts): Promise<T>;
-        serve<T>(exchange: string, routingKey: string, opts: SubscribeOpts, callback: ServeCallback<T>): void;
-        serve<T>(exchange: string, routingKey: string, callback: ServeCallback<T>): void;
-        bind<T>(exchange: string, topic: string, callback: SubscribeCallback<T>): Promise<void>;
-        bind<T>(exchange: string, queue: string, topic: string, callback: SubscribeCallback<T>): Promise<void>;
+        rpc<T>(exchange: string | Exchange, routingKey: string, msg: object | Buffer, headers?: MessageHeaders, opts?: RpcOpts): Promise<T>;
+        serve<T>(exchange: string | Exchange, routingKey: string, opts: SubscribeOpts, callback: ServeCallback<T>): void;
+        serve<T>(exchange: string | Exchange, routingKey: string, callback: ServeCallback<T>): void;
+        bind<T>(exchange: string | Exchange, topic: string, callback: SubscribeCallback<T>): Promise<void>;
+        bind<T>(exchange: string | Exchange, queue: string | Queue<T>, topic: string, callback: SubscribeCallback<T>): Promise<void>;
         shutdown(): Promise<void>;
     }
 
     export interface ExchangeOpts {
-        type: 'topic' | 'fanout' | 'direct' | 'headers'
+        type?: 'topic' | 'fanout' | 'direct' | 'headers'
         passive?: boolean
         durable?: boolean
         autoDelete?: boolean
@@ -91,7 +91,7 @@ declare namespace amqp {
     }
 
     export interface Queue<T> {
-        bind(exchange: string, topic: string): Promise<Queue<T>>;
+        bind(exchange: string | Exchange, topic: string): Promise<Queue<T>>;
         unbind(): Promise<Queue<T>>;
         subscribe(opts: SubscribeOpts, callback: SubscribeCallback<T>): Promise<Queue<T>>;
         subscribe(callback: SubscribeCallback<T>): Promise<Queue<T>>;
