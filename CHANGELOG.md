@@ -1,6 +1,10 @@
 Changelog
 =========
 
+# 5.2.3 - 2020-09-28
+
+  * Bug fix: there was an error in the typescript definition for `serve()`
+
 ## 5.2.2 - 2020-07-07
 
   * Bug fix: the `topic` argument for `exchange()` is optional. 

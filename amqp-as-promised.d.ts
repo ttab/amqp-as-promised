@@ -23,8 +23,8 @@ declare namespace amqp {
         queue<T>(opts: QueueOpts): Promise<Queue<T>>;
         queue<T>(): Promise<Queue<T>>;
         rpc<T>(exchange: string | Exchange, routingKey: string, msg: object | Buffer, headers?: MessageHeaders, opts?: RpcOpts): Promise<T>;
-        serve<T>(exchange: string | Exchange, routingKey: string, opts: SubscribeOpts, callback: ServeCallback<T>): void;
-        serve<T>(exchange: string | Exchange, routingKey: string, callback: ServeCallback<T>): void;
+        serve<T>(exchange: string | Exchange, routingKey: string, opts: SubscribeOpts, callback: ServeCallback<T>): Promise<void>;
+        serve<T>(exchange: string | Exchange, routingKey: string, callback: ServeCallback<T>): Promise<void>;
         bind<T>(exchange: string | Exchange, topic: string, callback: SubscribeCallback<T>): Promise<void>;
         bind<T>(exchange: string | Exchange, queue: string | Queue<T>, topic: string, callback: SubscribeCallback<T>): Promise<void>;
         shutdown(): Promise<void>;
