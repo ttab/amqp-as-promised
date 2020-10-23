@@ -1,4 +1,4 @@
-log        = require 'bog'
+log        = require 'loglevel'
 AmqpClient = require './amqp-client'
 Rpc        = require './rpc'
 RpcBackend = require './rpc-backend'
@@ -6,7 +6,7 @@ RpcBackend = require './rpc-backend'
 # facade that ties together the various pieces
 module.exports = (conf = {}) -> new Promise (resolve, reject) ->
     # set log level if defined in config
-    log.level conf.logLevel if conf.logLevel
+    log.setLevel conf.logLevel if conf.logLevel
 
     # support old-style configuration
     conf = { connection: conf } if not conf.connection

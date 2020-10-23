@@ -1,4 +1,4 @@
-log          = require 'bog'
+log          = require 'loglevel'
 
 module.exports = class QueueWrapper
 

@@ -1,17 +1,17 @@
 
 describe 'Index', ->
-    amqpc = Rpc = index = bog = undefined
+    amqpc = Rpc = index = loglevel = undefined
     beforeEach ->
         amqpc = stub().returns {
             connect: ->
                 Promise.resolve("ok")
         }
         Rpc   = spy()
-        bog   = level: spy()
+        loglevel   = setLevel: spy()
         index = proxyquire '../src/index', {
             './amqp-client': amqpc
             './rpc': Rpc
-            'bog': bog
+            'loglevel': loglevel
         }
 
     it 'should handle setting log level', ->
@@ -20,7 +20,7 @@ describe 'Index', ->
             vhost: 'vhost'
             logLevel: 'warn'
         index cfg
-        bog.level.should.have.been.calledWith 'warn'
+        loglevel.setLevel.should.have.been.calledWith 'warn'
 
     it 'should support new-style config', ->
         cfg =

@@ -29,8 +29,8 @@
   "license": "MIT",
   "dependencies": {
     "amqplib": "^0.4.2",
-    "bog": "1",
     "lodash.clone": "^4.5.0",
+    "loglevel": "^1.7.0",
     "mem-cache": "0.0.5",
     "uuid": "~2.0.1"
   },

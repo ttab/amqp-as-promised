@@ -1,4 +1,4 @@
-log   = require 'bog'
+log   = require 'loglevel'
 merge = require './merge'
 {compress, decompress} = require './compressor'
 

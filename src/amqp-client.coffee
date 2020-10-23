@@ -1,4 +1,4 @@
-log             = require 'bog'
+log             = require 'loglevel'
 amqp            = require 'amqplib'
 {EventEmitter}  = require 'events'
 ExchangeWrapper = require './exchange-wrapper'
