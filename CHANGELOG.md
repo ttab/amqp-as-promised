@@ -1,6 +1,10 @@
 Changelog
 =========
 
+# 5.3.0 - 2020-10-23
+
+  * Now use Loglevel instead of Bog for logging
+
 # 5.2.3 - 2020-09-28
 
   * Bug fix: there was an error in the typescript definition for `serve()`
