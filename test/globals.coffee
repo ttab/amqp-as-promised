@@ -14,5 +14,5 @@ chai.use(require 'chai-like')
 
 global.proxyquire = require 'proxyquire'
 
-log           = require 'bog'
-log.level -1
+log = require 'loglevel'
+log.setLevel 'silent'

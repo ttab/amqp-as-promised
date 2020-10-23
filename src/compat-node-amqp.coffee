@@ -1,4 +1,4 @@
-log = require 'bog'
+log = require 'loglevel'
 
 promise = undefined
 try
