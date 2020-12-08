@@ -1,6 +1,10 @@
 Changelog
 =========
 
+# 5.3.1 - 2020-12-08
+
+  * Bug fix: RpcError was missing from the TypeScript declarations
+
 # 5.3.0 - 2020-10-23
 
   * Now use Loglevel instead of Bog for logging
