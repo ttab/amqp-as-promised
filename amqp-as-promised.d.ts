@@ -2,6 +2,8 @@ declare function amqp(conf: amqp.AmqpConfig): Promise<amqp.AmqpClient>
 
 declare namespace amqp {
 
+    export class RpcError extends Error {}
+
     export interface AmqpConfig {
         connection: {
             url: string
