@@ -1,6 +1,11 @@
 Changelog
 =========
 
+# 5.3.2 - 2021-06-10
+
+  * The TYpeScript declarations now (correctly) expose the Queue.name
+    property.
+  
 # 5.3.1 - 2020-12-08
 
   * Bug fix: RpcError was missing from the TypeScript declarations
