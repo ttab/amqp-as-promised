@@ -16,7 +16,13 @@ node {
       try {
         sh 'JUNIT_REPORT_PATH=test-results.xml ./node_modules/.bin/mocha -R mocha-jenkins-reporter'
       } finally {
-        junit "test-results.xml"
+        recordIssues(
+          enabledForFailure: true,
+          tools: [
+            junitParser(pattern: 'test-results.xml')
+          ]
+        )
+        mineRepository()
       }
     }
 
@@ -24,7 +30,12 @@ node {
       try {
         sh './node_modules/.bin/coffeelint src --reporter checkstyle > checkstyle.xml'
       } finally {
-        checkstyle pattern: 'checkstyle.xml'
+        recordIssues(
+          enabledForFailure: true,
+          tools: [
+            checkStyle(pattern: 'checkstyle.xml')
+          ]
+        )
       }
     }
   }
