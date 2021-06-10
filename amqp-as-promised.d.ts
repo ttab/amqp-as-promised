@@ -93,6 +93,7 @@ declare namespace amqp {
     }
 
     export interface Queue<T> {
+        name: string
         bind(exchange: string | Exchange, topic: string): Promise<Queue<T>>;
         unbind(): Promise<Queue<T>>;
         subscribe(opts: SubscribeOpts, callback: SubscribeCallback<T>): Promise<Queue<T>>;
