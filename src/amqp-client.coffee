@@ -1,4 +1,4 @@
-log             = require 'loglevel'
+log             = require('loglevel').getLogger('amqp')
 amqp            = require 'amqplib'
 {EventEmitter}  = require 'events'
 ExchangeWrapper = require './exchange-wrapper'

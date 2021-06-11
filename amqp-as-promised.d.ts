@@ -16,6 +16,7 @@ declare namespace amqp {
         rpc?: {
             timeout?: number
         }
+        logLevel: 'error' | 'warn' | 'info' | 'debug' | 'trace'
     }
 
     export interface AmqpClient {

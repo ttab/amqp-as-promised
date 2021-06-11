@@ -1,6 +1,12 @@
 Changelog
 =========
 
+# 5.4.0 - 2021-06-11
+
+  * Now logging using a separate logger (`amqp`), to support selective
+    logging. The log level can be set using the `logLevel` connection
+    parameter, or by calling `log.getLogger('amqp').setLevet('debug')`
+    
 # 5.3.2 - 2021-06-10
 
   * The TYpeScript declarations now (correctly) expose the Queue.name

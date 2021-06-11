@@ -1,4 +1,4 @@
-log          = require 'loglevel'
+log          = require('loglevel').getLogger('amqp')
 
 module.exports = class QueueWrapper
 

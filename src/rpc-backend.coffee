@@ -1,4 +1,4 @@
-log   = require 'loglevel'
+log   = require('loglevel').getLogger('amqp')
 merge = require './merge'
 {compress, decompress} = require './compressor'
 

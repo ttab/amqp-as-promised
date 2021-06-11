@@ -1,4 +1,4 @@
-log        = require 'loglevel'
+log        = require('loglevel').getLogger('amqp')
 AmqpClient = require './amqp-client'
 Rpc        = require './rpc'
 RpcBackend = require './rpc-backend'
