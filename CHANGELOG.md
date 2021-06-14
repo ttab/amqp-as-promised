@@ -1,6 +1,10 @@
 Changelog
 =========
 
+# 5.4.1 - 2021-06-14
+
+  * The `logLevel` configuration option should of course be optional.
+  
 # 5.4.0 - 2021-06-11
 
   * Now logging using a separate logger (`amqp`), to support selective
