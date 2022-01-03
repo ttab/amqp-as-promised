@@ -67,11 +67,12 @@ describe 'QueueWrapper', ->
                         routingKey: 'cub'
                     content: Buffer.from('{"panda": true}')
                 }
-                cb.should.have.been.calledWith \
-                    match { data: match.instanceOf(Buffer), contentType: 'application/octet-stream' },
+                cb.should.have.been.calledWith(
+                    match({ data: match.instanceOf(Buffer), contentType: 'application/octet-stream' }),
                     { 'x-panda': true },
-                    match { routingKey: 'cub', contentType: 'application/octet-stream' },
-                    match acknowledge: match.func
+                    match({ routingKey: 'cub', contentType: 'application/octet-stream' }),
+                    match({ acknowledge: match.func })
+                )
 
         it 'should deserialize json payloads', ->
             queue.subscribe {}, cb

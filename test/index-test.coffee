@@ -5,13 +5,15 @@ describe 'Index', ->
         amqpc = stub().returns {
             connect: ->
                 Promise.resolve("ok")
+            on: ->
         }
         Rpc   = spy()
         loglevel   = setLevel: spy()
         index = proxyquire '../src/index', {
             './amqp-client': amqpc
             './rpc': Rpc
-            'loglevel': loglevel
+            'loglevel':
+                getLogger: -> loglevel
         }
 
     it 'should handle setting log level', ->

@@ -15,4 +15,4 @@ chai.use(require 'chai-like')
 global.proxyquire = require 'proxyquire'
 
 log = require 'loglevel'
-log.setLevel 'silent'
+log.getLogger('amqp').setLevel 'silent'
