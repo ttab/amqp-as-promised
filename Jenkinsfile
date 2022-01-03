@@ -7,7 +7,7 @@ node {
     sh "git clean -d -f -x"
   }
 
-  docker.image('node:erbium').inside {
+  docker.image('node:gallium').inside {
     stage('npm install') {
       sh 'npm install'
     }

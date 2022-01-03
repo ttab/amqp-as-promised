@@ -9,6 +9,7 @@ wait = (time) -> new Promise (rs) -> setTimeout rs, time
 module.exports = class AmqpClient extends EventEmitter
 
     constructor: (@conf, @compat = require('./compat-node-amqp')) ->
+        super()
         @exchanges = {}
         @queues = {}
 
