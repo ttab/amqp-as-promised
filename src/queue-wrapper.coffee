@@ -57,6 +57,7 @@ module.exports = class QueueWrapper
                 @channel.consume @queue.queue, @client.compat.callback(@channel, callback), opts
             ]).then ([whatevs, { consumerTag }]) =>
                 @_consumerTag = consumerTag
+                log.info 'subscribed:', @name, @_consumerTag
                 @
         .catch (err) ->
             log.error "qw _subscribe error", err
