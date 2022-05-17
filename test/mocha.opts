@@ -1,4 +1,0 @@
---require coffeescript/register
---reporter list
---colors
-test/*.coffee
