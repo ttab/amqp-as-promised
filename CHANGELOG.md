@@ -1,7 +1,7 @@
 Changelog
 =========
 
-# 5.5.0 - 2022-05-17
+# 5.6.0 - 2022-05-17
 
   * The library is more conservative in creating new channels, which 
     hopefully preserves resource usage on the server side.
@@ -18,7 +18,7 @@ Changelog
     
 # 5.3.2 - 2021-06-10
 
-  * The TYpeScript declarations now (correctly) expose the Queue.name
+  * The TypeScript declarations now (correctly) expose the Queue.name
     property.
   
 # 5.3.1 - 2020-12-08
