@@ -1,6 +1,11 @@
 Changelog
 =========
 
+# 5.5.0 - 2022-05-17
+
+  * The library is more conservative in creating new channels, which 
+    hopefully preserves resource usage on the server side.
+
 # 5.4.1 - 2021-06-14
 
   * The `logLevel` configuration option should of course be optional.
