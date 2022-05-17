@@ -14,7 +14,7 @@ describe 'QueueWrapper', ->
             bindQueue: stub().returns Promise.resolve()
             unbindQueue: stub().returns Promise.resolve()
         client =
-            getChannel: Promise.resolve(channel)
+            getChannel: -> Promise.resolve(channel)
             compat: require '../src/compat-node-amqp'
             exchange: stub().returns Promise.resolve exchange
         _queue = { queue: 'pandas' }

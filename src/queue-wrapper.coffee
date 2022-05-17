@@ -49,12 +49,14 @@ module.exports = class QueueWrapper
             callback = opts
             opts = null
         @unsubscribe().then =>
+            if @consumerChannel then @consumerChannel else @client.getChannel()
+        .then (@consumerChannel) =>
             opts = @client.compat.subscribeOpts(opts)
             # this is questionable and open to race conditions,
             # but there is no other way to do it
             Promise.all([
-                @channel.prefetch opts.prefetch
-                @channel.consume @queue.queue, @client.compat.callback(@channel, callback), opts
+                @consumerChannel.prefetch opts.prefetch
+                @consumerChannel.consume @queue.queue, @client.compat.callback(@consumerChannel, callback), opts
             ]).then ([whatevs, { consumerTag }]) =>
                 @_consumerTag = consumerTag
                 log.info 'subscribed:', @name, @_consumerTag
@@ -68,8 +70,8 @@ module.exports = class QueueWrapper
         @client.compat.promise(@_subscribe opts, callback)
 
     _unsubscribe: =>
-        return @ unless @_consumerTag
-        @channel.cancel(@_consumerTag).then =>
+        return @ unless @_consumerTag and @consumerChannel
+        @consumerChannel.cancel(@_consumerTag).then =>
             log.info 'unsubscribed:', @name, @_consumerTag
             delete @_consumerTag
             @

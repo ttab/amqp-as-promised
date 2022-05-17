@@ -30,6 +30,8 @@ module.exports = class AmqpClient extends EventEmitter
 
         amqp.connect(uri, opts).then (@conn) =>
             log.info "connected"
+            # create a channel for sending AMQP commands
+            @channel = @getChannel()
 
             # emit an error on connection 'close' event, unless we are
             # shutting down
@@ -64,7 +66,7 @@ module.exports = class AmqpClient extends EventEmitter
     _exchange: (name, type, opts) =>
         return name if name instanceof ExchangeWrapper
         return @exchanges[name] if @exchanges[name]
-        @getChannel().then (c) =>
+        @channel.then (c) =>
             (if not type
                 if name is ''
                     Promise.resolve({ exchange: '' })
@@ -92,7 +94,7 @@ module.exports = class AmqpClient extends EventEmitter
         opts = opts ? if qname == '' then { exclusive: true }
         return @queues[qname] if @queues[qname] and qname isnt ''
 
-        @getChannel().then (c) =>
+        @channel.then (c) =>
             (if not opts
                 c.checkQueue(qname)
             else
