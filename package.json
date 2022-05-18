@@ -32,7 +32,7 @@
     "lodash.clone": "^4.5.0",
     "loglevel": "^1.7.0",
     "mem-cache": "0.0.5",
-    "uuid": "~2.0.1"
+    "uuid": "~8.3.2"
   },
   "devDependencies": {
     "@ttab/coffeescript-style": "^0.2.2",
