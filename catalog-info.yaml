@@ -1,0 +1,14 @@
+apiVersion: backstage.io/v1beta1
+kind: Component
+metadata:
+  name: amqp-as-promised
+  namespace: default
+  description: |
+    Promise-based AMQP library build on top of amqplib.
+  annotations:
+    github.com/project-slug: ttab/amqp-as-promised
+spec:
+  owner: backend
+  type: library
+  lifecycle: production
+
