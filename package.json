@@ -44,7 +44,7 @@
     "mocha": "^10.0.0",
     "mocha-jenkins-reporter": "^0.4",
     "proxyquire": "^2",
-    "sinon": "^7",
+    "sinon": "^15",
     "sinon-chai": "^3"
   }
 }
