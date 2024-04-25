@@ -1,6 +1,12 @@
 Changelog
 =========
 
+# 5.6.2 - 2024-04-25
+  * Upgrade `amqplib` and `coffeelint` due to security vulnerabilities.
+
+# 5.6.1 - 2024-04-25
+  * Mask passwords when logging connection string.
+
 # 5.6.0 - 2022-05-17
 
   * The library is more conservative in creating new channels, which 
