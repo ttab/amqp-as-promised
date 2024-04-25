@@ -39,7 +39,7 @@
     "chai": "^4",
     "chai-as-promised": "^7.0.0",
     "chai-like": "^1",
-    "coffeelint": "^2",
+    "@coffeelint/cli": "^5",
     "coffeescript": "^2",
     "mocha": "^10.0.0",
     "proxyquire": "^2",
