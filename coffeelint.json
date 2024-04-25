@@ -1,3 +1,209 @@
 {
-  "extends": "@ttab/coffeescript-style"
+  "arrow_spacing": {
+    "type": "style",
+    "level": "ignore"
+  },
+  "braces_spacing": {
+    "type": "style",
+    "level": "ignore",
+    "spaces": 0,
+    "empty_object_spaces": 0
+  },
+  "bracket_spacing": {
+    "type": "style",
+    "level": "ignore",
+    "spaces": 0,
+    "empty_array_spaces": 0,
+    "exceptions": []
+  },
+  "camel_case_classes": {
+    "type": "style",
+    "level": "error"
+  },
+  "coffeescript_error": {
+    "level": "error"
+  },
+  "colon_assignment_spacing": {
+    "type": "style",
+    "level": "ignore",
+    "spacing": {
+      "left": 0,
+      "right": 0
+    }
+  },
+  "cyclomatic_complexity": {
+    "type": "problem",
+    "level": "ignore",
+    "value": 10
+  },
+  "duplicate_key": {
+    "type": "problem",
+    "level": "error"
+  },
+  "empty_constructor_needs_parens": {
+    "type": "style",
+    "level": "ignore"
+  },
+  "ensure_comprehensions": {
+    "type": "style",
+    "level": "warn"
+  },
+  "eol_last": {
+    "type": "style",
+    "level": "ignore"
+  },
+  "indentation": {
+    "type": "problem",
+    "value": 4,
+    "level": "error"
+  },
+  "line_endings": {
+    "type": "problem",
+    "level": "ignore",
+    "value": "unix"
+  },
+  "max_line_length": {
+    "type": "style",
+    "value": 120,
+    "level": "error",
+    "limitComments": true
+  },
+  "missing_fat_arrows": {
+    "type": "problem",
+    "level": "ignore",
+    "is_strict": false
+  },
+  "missing_parseint_radix": {
+    "type": "problem",
+    "level": "warn"
+  },
+  "newlines_after_classes": {
+    "type": "style",
+    "value": 3,
+    "level": "ignore"
+  },
+  "no_backticks": {
+    "type": "problem",
+    "level": "error"
+  },
+  "no_debugger": {
+    "type": "problem",
+    "level": "warn",
+    "console": false
+  },
+  "no_empty_functions": {
+    "type": "problem",
+    "level": "ignore"
+  },
+  "no_empty_param_list": {
+    "type": "style",
+    "level": "ignore"
+  },
+  "no_implicit_braces": {
+    "type": "style",
+    "level": "ignore",
+    "strict": true
+  },
+  "no_implicit_parens": {
+    "type": "style",
+    "level": "ignore",
+    "strict": true
+  },
+  "no_interpolation_in_single_quotes": {
+    "type": "problem",
+    "level": "ignore"
+  },
+  "no_nested_string_interpolation": {
+    "type": "problem",
+    "level": "warn"
+  },
+  "no_plusplus": {
+    "type": "style",
+    "level": "ignore"
+  },
+  "no_private_function_fat_arrows": {
+    "type": "style",
+    "level": "warn"
+  },
+  "no_spaces": {
+    "type": "style",
+    "level": "ignore"
+  },
+  "no_stand_alone_at": {
+    "type": "style",
+    "level": "ignore"
+  },
+  "no_tabs": {
+    "type": "style",
+    "level": "error"
+  },
+  "no_this": {
+    "type": "style",
+    "level": "ignore"
+  },
+  "no_throwing_strings": {
+    "type": "problem",
+    "level": "error"
+  },
+  "no_trailing_semicolons": {
+    "type": "style",
+    "level": "error"
+  },
+  "no_trailing_whitespace": {
+    "type": "style",
+    "level": "error",
+    "allowed_in_comments": false,
+    "allowed_in_empty_lines": true
+  },
+  "no_unnecessary_double_quotes": {
+    "type": "style",
+    "level": "ignore"
+  },
+  "no_unnecessary_fat_arrows": {
+    "type": "style",
+    "level": "warn"
+  },
+  "non_empty_constructor_needs_parens": {
+    "type": "style",
+    "level": "ignore"
+  },
+  "object_shorthand": {
+    "type": "style",
+    "level": "ignore"
+  },
+  "prefer_english_operator": {
+    "type": "style",
+    "level": "ignore",
+    "doubleNotLevel": "ignore",
+    "ops": [
+      "and",
+      "or",
+      "not",
+      "is",
+      "isnt"
+    ]
+  },
+  "prefer_fat_arrows_in_methods": {
+    "type": "style",
+    "level": "ignore"
+  },
+  "prefer_logical_operator": {
+    "type": "style",
+    "level": "ignore",
+    "doubleNotLevel": "ignore"
+  },
+  "space_operators": {
+    "type": "style",
+    "level": "ignore",
+    "default_parameters": true
+  },
+  "spacing_after_comma": {
+    "type": "style",
+    "level": "ignore",
+    "ignore_elision": false
+  },
+  "transform_messes_up_line_numbers": {
+    "type": "style",
+    "level": "warn"
+  }
 }

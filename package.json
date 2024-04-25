@@ -35,7 +35,6 @@
     "uuid": "~2.0.1"
   },
   "devDependencies": {
-    "@ttab/coffeescript-style": "^0.2.2",
     "chai": "^4",
     "chai-as-promised": "^7.0.0",
     "chai-like": "^1",
