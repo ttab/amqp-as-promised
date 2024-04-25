@@ -26,7 +26,9 @@ module.exports = class AmqpClient extends EventEmitter
 
     connect: =>
         [ uri, opts ] = @compat.connection(@conf)
-        log.info "connecting to:", uri
+        url = new URL(uri)
+        url.password = url.password.replace(/./g, '*')
+        log.info "connecting to:", url.toString()
 
         amqp.connect(uri, opts).then (@conn) =>
             log.info "connected"
