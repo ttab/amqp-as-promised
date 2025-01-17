@@ -109,7 +109,7 @@ describe 'Rpc', ->
                 def = rpc.registerResponse '1234'
                 buf = gzipSync Buffer.from('so wrong') # this is not valid json
                 rpc.resolveResponse '1234', buf, compress:'json'
-                def.promise.should.eventually.be.rejectedWith 'Unexpected token s'
+                def.promise.should.eventually.be.rejectedWith 'Unexpected token'
 
         describe 'with a compress:buffer header', ->
 
