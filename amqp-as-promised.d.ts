@@ -16,6 +16,7 @@ declare namespace amqp {
         rpc?: {
             timeout?: number
         }
+        publisherConfirm?: boolean
         logLevel?: 'error' | 'warn' | 'info' | 'debug' | 'trace'
     }
 

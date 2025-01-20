@@ -88,6 +88,15 @@ or
 
 * `timeout`: timeout in ms for rpc calls. Default: 1000ms
 
+
+### `publisherConfirm`
+
+*Since 5.7.0*
+
+ * `publisherConfirm`: boolean that enables or disables the RabbitMQ
+    [Publisher Confirms](https://www.rabbitmq.com/docs/confirms) extension.
+    Default: false.
+
 ### `logLevel`
 
 * `logLevel`: sets the log level. Defaults to `INFO`. Possible levels
@@ -117,6 +126,7 @@ do this is to attach an `error` event handler.
             "login": "test",
             "password": "supersecret"
         },
+        "publisherConfirm": true,
         "logLevel": "warn",
         "rpc": {
             "timeout": 2000
@@ -410,3 +420,4 @@ Example
 amqpc.rpc('myexchange', 'routing.key', msg, [headers], {compress:true}).then (response) ->
     console.log 'received message', response
 ```
+

@@ -1,6 +1,9 @@
 Changelog
 =========
 
+# 5.7.0 - 2025-01-20
+  * Support for the RabbitMQ 'Publisher Confirms' extension.
+
 # 5.6.2 - 2024-04-25
   * Upgrade `amqplib` and `coffeelint` due to security vulnerabilities.
 

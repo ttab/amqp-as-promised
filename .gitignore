@@ -2,3 +2,4 @@ node_modules
 .cake_task_cache
 lib
 /.log/
+.envrc
