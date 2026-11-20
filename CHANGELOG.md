@@ -1,6 +1,16 @@
 Changelog
 =========
 
+# Unreleased
+  * Listen for `'error'` on the amqplib connection and on every channel.
+    amqplib emits `'error'` before it tears a connection or channel down
+    (heartbeat timeout, socket error, a channel closed by the server). With
+    no listener the emit threw as an `uncaughtException`, the teardown was
+    skipped, and the connection was left half-open: its heartbeat timer kept
+    throwing every interval and `'close'` never reached the application.
+    The `'close'` that follows is still surfaced as `'error'` on the client,
+    as before.
+
 # 5.7.0 - 2025-01-20
   * Support for the RabbitMQ 'Publisher Confirms' extension.
 
