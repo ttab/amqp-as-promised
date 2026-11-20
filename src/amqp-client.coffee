@@ -32,6 +32,18 @@ module.exports = class AmqpClient extends EventEmitter
 
         amqp.connect(uri, opts).then (@conn) =>
             log.info "connected"
+
+            # amqplib emits 'error' on the connection *before* it tears
+            # it down (heartbeat timeout, socket error, a fatal close
+            # from the server). An emitter with no 'error' listener
+            # throws, so without this listener the teardown never runs:
+            # the connection is left half-open, its heartbeat timer
+            # keeps firing (and throwing) forever, and the 'close'
+            # below is never emitted, so the application is never told.
+            # The 'close' that follows is what we surface.
+            @conn.on 'error', (err) ->
+                log.warn 'connection error:', err?.message
+
             # create a channel for sending AMQP commands
             @channel = @getChannel()
 
@@ -55,6 +67,13 @@ module.exports = class AmqpClient extends EventEmitter
             # set max listeners to something arbitrarily large in
             # order to avoid misleading 'memory leak' error messages
             c.setMaxListeners @conf.maxListeners or 1000
+
+            # Same for channels: a channel closed by the server (e.g.
+            # 406 PRECONDITION_FAILED) emits 'error' before 'close'.
+            # Unhandled, the throw unwinds through amqplib's frame loop
+            # and leaves the whole connection half-open with it.
+            c.on 'error', (err) ->
+                log.warn 'channel error:', err?.message
 
             # emit an error on channel 'close' event, unless we are
             # shutting down

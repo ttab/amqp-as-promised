@@ -232,3 +232,43 @@ describe 'AmqpClient', ->
                     spy q, 'unsubscribe'
                     client.unbind('cub').then ->
                         q.unsubscribe.should.have.been.calledOnce
+
+    # amqplib emits 'error' *before* it tears a connection or channel
+    # down. With no listener the emit throws, the teardown is skipped,
+    # and the connection is left half-open: its heartbeat timer keeps
+    # throwing 'Heartbeat timeout' as an uncaughtException forever, and
+    # 'close' never reaches the application. Seen in production: one
+    # 406 PRECONDITION_FAILED channel close left a connection like that
+    # for a day, throwing every 60 seconds.
+    describe 'errors from amqplib', ->
+        client = errors = undefined
+        beforeEach ->
+            client = new AmqpClient { connection: url: 'amqp://panda' }
+            errors = []
+            client.on 'error', (e) -> errors.push e
+            client.connect()
+
+        it 'should not throw when the connection emits an error', ->
+            expect(-> conn.emit 'error', new Error 'Heartbeat timeout').to.not.throw()
+
+        it 'should surface the close that follows a connection error, once', ->
+            hberr = new Error 'Heartbeat timeout'
+            conn.emit 'error', hberr
+            conn.emit 'close', hberr
+            errors.should.eql [ hberr ]
+
+        it 'should not throw when a channel emits an error', ->
+            client.getChannel().then ->
+                expect(-> channel.emit 'error', new Error 'Channel closed by server: 406 (PRECONDITION-FAILED)').to.not.throw()
+
+        it 'should surface the close that follows a channel error', ->
+            client.getChannel().then ->
+                channel.emit 'error', new Error 'Channel closed by server: 406 (PRECONDITION-FAILED)'
+                channel.emit 'close'
+                errors.map((e) -> e.message).should.include 'Channel closed'
+
+        it 'should not surface anything while shutting down', ->
+            client.shuttingDown = true
+            conn.emit 'error', new Error 'Connection closed'
+            conn.emit 'close', new Error 'Connection closed'
+            errors.should.eql []
